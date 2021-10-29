@@ -1,0 +1,259 @@
+.iconList {
+  list-style-type: none;
+  display: flex;
+}
+
+.icon {
+  margin: 0 8px 0 8px;
+  height: 24px;
+  width: 24px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.searchContainer {
+  background-color: #202225;
+  margin: 0 8px 0 8px;
+  padding-left: 4px;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  width: 144px;
+}
+
+.search {
+  background-color: #202225;
+  border: hidden;
+  color: white;
+  width: 116px;
+}
+.search:focus {
+  outline: none;
+}
+
+.searchIcon {
+  background-color: #202225;
+
+  height: 24px;
+  width: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chatContentOuter {
+  height: 860px;
+  width: 100%;
+  display: flex;
+}
+
+.chatContentInner {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.chatContentInner article {
+  position: relative;
+
+  padding: 2px 48px 2px 72px;
+  margin-top: 17px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.chatContentInner article span {
+  color: #dcddde;
+  font-weight: 400;
+  font-size: 14px;
+  padding: 2px 0;
+}
+
+.chatContentInner article div {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.chatContentInner article div h4 {
+  color: #dcddde;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+  padding: 0;
+  margin-right: 4px;
+}
+
+.chatContentInner article div span {
+  color: #72767d;
+  font-weight: 500;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.messageAvatar {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 2px;
+  left: 16px;
+  margin-top: 2px;
+  border-radius: 100%;
+  background-color: #fff;
+}
+
+.scrollSpacer {
+  height: 30px;
+  width: 1px;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  border: 4px solid;
+  border-color: #36393e;
+  background-clip: padding-box;
+  background: hsl(210, calc(var(--saturation-factor, 1) * 9.8%), 20%);
+
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #202225;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 4px solid transparent;
+  background-clip: padding-box;
+  border-radius: 8px;
+}
+
+.messageInputForm {
+  height: 44px;
+  width: auto;
+  margin: 0px 16px 24px 16px;
+  background-color: #40444b;
+  border-radius: 8px;
+  display: flex;
+}
+
+.messageAddFileButton {
+  height: 24px;
+  width: 24px;
+  margin: 10px 16px 10px 16px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+}
+
+.messageBarInput {
+  flex: 1;
+  border: hidden;
+  color: white;
+  background-color: #40444b;
+  font-size: 14px;
+}
+.messageBarInput::placeholder {
+  color: #72767d;
+  font-size: 14px;
+}
+
+.messageBarInput:focus {
+  outline: none;
+}
+
+.messageBarIconList {
+  list-style-type: none;
+  display: flex;
+  margin: 0px;
+  margin-right: 4px;
+}
+
+.messageBarIcon {
+  height: 44px;
+  width: 40px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.messageBarIconFile {
+  height: 44px;
+  width: 32px;
+  margin-left: 4px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.gifIcon {
+  height: 22px;
+  width: 28px;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #b9bbbe;
+}
+
+.userList {
+  list-style-type: none;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  margin-left: 8px;
+}
+
+.userList h2 {
+  padding: 24px 8px 0 12px;
+  text-align: left;
+  margin: 0;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8e9297;
+}
+
+.userList li {
+  width: 224px;
+  height: 42px;
+  padding: 0px 8px;
+  display: flex;
+  align-items: center;
+}
+
+.userListIcon {
+  width: 32px;
+  height: 32px;
+  margin-right: 12px;
+  border-radius: 100%;
+  background-color: #fff;
+}
+
+.userList li span {
+  font-weight: 500;
+  font-size: 16px;
+  color: #8e9297;
+}
