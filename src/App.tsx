@@ -15,10 +15,16 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { collection, addDoc, query, doc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  query,
+  doc,
+  where,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
-
-import { useAuthState } from "react-firebase-hooks/auth";
 
 import "./App.css";
 
@@ -65,7 +71,7 @@ function App() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUserType[]>([]);
   const [notDiscord, setNotDiscord] = useState<string>("");
 
-  const [user] = useAuthState(auth);
+  const user = auth.currentUser;
 
   useEffect(() => {
     const handleResize = () =>
@@ -204,13 +210,20 @@ function App() {
     await addDoc(collection(db, path), data);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     const userData = auth?.currentUser?.providerData.find(
       (el: Record<string, any>) => el.providerId === "google.com"
     );
-    const userDocId = onlineUsers.find((el) => el.userId === userData?.uid)?.id;
+
+    const q = query(
+      collection(db, "onlineUsers"),
+      where("userId", "==", userData?.uid)
+    );
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((el) => {
+      deleteDoc(doc(db, `onlineUsers/${el.id}`));
+    });
     signOut(auth);
-    deleteDoc(doc(db, `onlineUsers/${userDocId}`));
   };
 
   const signInWithGoogle = async () => {

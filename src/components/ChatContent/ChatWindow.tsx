@@ -13,7 +13,6 @@ import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 
 import { ChatContent, ChatHeader, UserList } from "./Layout";
 import styles from "./ChatWindow.module.css";
-import { useAuthState } from "react-firebase-hooks/auth";
 
 export interface MessageType {
   id: string;
