@@ -24,6 +24,8 @@ interface Props {
   setChannel: Dispatch<
     SetStateAction<{ id: string; name: string; server: string } | undefined>
   >;
+  user: any;
+  signOut: () => void;
 }
 
 const ChannelList: React.FC<Props> = ({
@@ -31,6 +33,8 @@ const ChannelList: React.FC<Props> = ({
   server,
   channel,
   setChannel,
+  user,
+  signOut,
 }) => {
   // const temp = [
   //   [
@@ -111,7 +115,7 @@ const ChannelList: React.FC<Props> = ({
         <Channel title="General" />
       </ChannelGroup> */}
       <div style={{ flexGrow: 1 }} />
-      <Footer />
+      <Footer signOut={signOut} user={user} />
     </Layout>
   );
 };

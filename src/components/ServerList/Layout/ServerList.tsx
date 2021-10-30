@@ -1,10 +1,13 @@
 import React, { ReactNode } from "react";
 
+import styles from "./ServerList.module.css";
+
 interface Props {
   children: ReactNode;
+  icon: string;
 }
 
-const ServerList: React.FC<Props> = ({ children }) => {
+const ServerList: React.FC<Props> = ({ children, icon }) => {
   return (
     <div
       style={{
@@ -25,15 +28,9 @@ const ServerList: React.FC<Props> = ({ children }) => {
           alignItems: "center",
         }}
       >
-        <div
-          style={{
-            backgroundColor: "#36393f",
-            borderRadius: "100%",
-            height: "48px",
-            width: "48px",
-            marginBottom: "8px",
-          }}
-        />
+        <div className={styles.iconContainer}>
+          <img src={icon} />
+        </div>
         <div
           style={{
             height: "2px",

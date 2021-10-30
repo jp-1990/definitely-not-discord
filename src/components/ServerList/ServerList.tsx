@@ -12,9 +12,15 @@ interface Props {
   serverList: ServerType[];
   server?: Omit<ServerType, "icon">;
   setServer: Dispatch<SetStateAction<Omit<ServerType, "icon"> | undefined>>;
+  icon: string;
 }
 
-const ServerList: React.FC<Props> = ({ serverList, server, setServer }) => {
+const ServerList: React.FC<Props> = ({
+  serverList,
+  server,
+  setServer,
+  icon,
+}) => {
   const temp = [
     { name: "happy codey friends", id: "0" },
     { name: "Mumble 2.0", id: "1" },
@@ -34,10 +40,17 @@ const ServerList: React.FC<Props> = ({ serverList, server, setServer }) => {
     }
     const onClick = () => setServer(el);
 
-    return <ServerIcon key={el.id} selected={selected} onClick={onClick} />;
+    return (
+      <ServerIcon
+        key={el.id}
+        selected={selected}
+        onClick={onClick}
+        url={el.icon}
+      />
+    );
   });
 
-  return <Layout>{servers}</Layout>;
+  return <Layout icon={icon}>{servers}</Layout>;
 };
 
 export default ServerList;

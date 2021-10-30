@@ -13,6 +13,7 @@ import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 
 import { ChatContent, ChatHeader, UserList } from "./Layout";
 import styles from "./ChatWindow.module.css";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 export interface MessageType {
   id: string;
@@ -23,11 +24,15 @@ export interface MessageType {
   message: string;
 }
 
+export type OnlineUserType = Omit<MessageType, "date" | "message">;
+
 interface Props {
   channel: { id: string; name: string; server: string } | undefined;
   server: { id: string; name: string } | undefined;
   messages: Record<string, MessageType[]>;
   addMessage: (path: string, data: Omit<MessageType, "id">) => void;
+  user: any;
+  onlineUsers: OnlineUserType[];
 }
 
 const ChatWindow: React.FC<Props> = ({
@@ -35,6 +40,8 @@ const ChatWindow: React.FC<Props> = ({
   channel,
   server,
   addMessage,
+  user,
+  onlineUsers,
 }) => {
   const [textInput, setTextInput] = useState<string>("");
   // const [messages, setMessages] = useState<Message[]>([]);
@@ -45,11 +52,16 @@ const ChatWindow: React.FC<Props> = ({
     e.preventDefault();
     if (!textInput) return;
 
+    const userData = user.providerData.find(
+      (el: Record<string, any>) => el.providerId === "google.com"
+    );
+
     addMessage(`servers/${server?.id}/channels/${channel?.id}/messages`, {
-      userId: "0",
-      userName: "jp",
+      userId: userData.uid,
+      userName: userData.displayName,
       date: `${Date.now()}`,
       message: textInput,
+      avatar: userData.photoURL,
     });
     // setMessages((prev) => {
     //   return [
@@ -69,6 +81,24 @@ const ChatWindow: React.FC<Props> = ({
     setTextInput("");
   };
 
+  const renderOnlineUsers =
+    onlineUsers &&
+    onlineUsers.map((el) => {
+      return (
+        <li key={el.id}>
+          <div className={styles.userListIcon}>
+            {el.avatar && (
+              <div>
+                <img src={el.avatar} />
+                <div className={styles.onlineMarker} />
+              </div>
+            )}
+          </div>
+          <span>{el.userName}</span>
+        </li>
+      );
+    });
+
   const renderMessages = (() => {
     if (!channel) return;
     if (!messages[channel.id]) return;
@@ -82,10 +112,15 @@ const ChatWindow: React.FC<Props> = ({
         );
       return (
         <article key={el.id}>
-          <div className={styles.messageAvatar} />
+          <div className={styles.messageAvatar}>
+            {el.avatar && <img src={el.avatar} />}
+          </div>
           <div className={styles.messageAuthor}>
             <h4>{el.userName}</h4>
-            <span>Today at {}</span>
+            <span>
+              {new Date(+el.date).toDateString()} at{" "}
+              {new Date(+el.date).getHours()}:{new Date(+el.date).getMinutes()}
+            </span>
           </div>
           <span className={styles.messageText}>{el.message}</span>
         </article>
@@ -203,15 +238,8 @@ const ChatWindow: React.FC<Props> = ({
         </ChatContent>
         <UserList>
           <div className={styles.userList} role="list">
-            <h2>ONLINE - 2</h2>
-            <li>
-              <div className={styles.userListIcon} />
-              <span>jp</span>
-            </li>
-            <li>
-              <div className={styles.userListIcon} />
-              <span>Versace</span>
-            </li>
+            <h2>ONLINE - {onlineUsers.length}</h2>
+            {renderOnlineUsers}
           </div>
         </UserList>
       </div>

@@ -1,0 +1,71 @@
+.container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background-color: #4d5159;
+  justify-content: center;
+  align-items: center;
+}
+
+.container section {
+  display: flex;
+  background-color: #36393e;
+  height: 220px;
+  width: 300px;
+  flex-direction: column;
+  padding: 32px;
+  border-radius: 8px;
+  box-shadow: 3px 3px 4px #252526cb;
+  margin-bottom: 100px;
+}
+
+.container section h2 {
+  margin: 0;
+  padding: 0;
+  text-align: left;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.container section span {
+  color: #b9bbbe;
+  text-align: left;
+  font-size: 14px;
+}
+
+.container section p {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 300;
+  text-align: left;
+  padding: 0;
+  margin: 0;
+}
+
+.container section div {
+  flex: 1;
+}
+
+.container section button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  color: #36393e;
+  border: none;
+  border-radius: 3px;
+  height: 40px;
+  padding: 2px 16px;
+  margin-top: 24px;
+}
+
+.container section button h3 {
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  margin-left: 8px;
+  font-weight: 500;
+  font-family: "Open Sans";
+}

@@ -120,6 +120,13 @@
   background-color: #fff;
 }
 
+.messageAvatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 100%;
+  background-color: #fff;
+}
+
 .scrollSpacer {
   min-height: 30px;
   width: 1px;
@@ -263,6 +270,24 @@
   margin-right: 12px;
   border-radius: 100%;
   background-color: #fff;
+  position: relative;
+}
+
+.userListIcon img {
+  width: 32px;
+  height: 32px;
+  border-radius: 100%;
+}
+
+.onlineMarker {
+  height: 10px;
+  width: 10px;
+  background-color: #3ba55d;
+  position: absolute;
+  border-radius: 100%;
+  bottom: 0;
+  right: -2px;
+  border: 1px solid #202225;
 }
 
 .userList li span {

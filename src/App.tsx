@@ -3,22 +3,20 @@ import React, { useState, useEffect } from "react";
 import firebase from "firebase/app";
 import { initializeApp } from "firebase/app";
 import {
-  DocumentData,
+  deleteDoc,
   getFirestore,
   orderBy,
   Unsubscribe,
 } from "firebase/firestore";
 
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  doc,
-  onSnapshot,
-} from "firebase/firestore";
+  getAuth,
+  signOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+} from "firebase/auth";
+import { collection, addDoc, query, doc, onSnapshot } from "firebase/firestore";
+import { getStorage, ref, getDownloadURL } from "firebase/storage";
 
 import { useAuthState } from "react-firebase-hooks/auth";
 
@@ -26,7 +24,11 @@ import "./App.css";
 
 import ServerList, { ServerType } from "./components/ServerList";
 import ChannelList, { ChannelType } from "./components/ChannelList";
-import ChatWindow, { MessageType } from "./components/ChatContent";
+import ChatWindow, {
+  MessageType,
+  OnlineUserType,
+} from "./components/ChatContent";
+import SignIn from "./components/SignIn";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -43,26 +45,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
 
 const db = getFirestore();
-
-const SignIn = () => {
-  const signInWithGoogle = () => {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(auth, provider);
-  };
-  return <button onClick={signInWithGoogle} />;
-};
-// const SignOut = () => {
-//   return auth.currentUser && <button onClick={auth.signOut} />;
-// };
-
-// const serversQuery = () => {
-//   const serverRef = collection(db, "servers");
-//   const q = query(serverRef, where("name", "==", "Test Server"));
-//   return q;
-// };
-
-// const testSnapshot = await getDocs(serversQuery());
-// testSnapshot.forEach((el) => console.log(el.data(), el.id));
+const storage = getStorage();
 
 function App() {
   const [dimensions, setDimensions] = useState<{
@@ -79,6 +62,8 @@ function App() {
   const [server, setServer] = useState<{ id: string; name: string }>();
   const [channel, setChannel] =
     useState<{ id: string; name: string; server: string }>();
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUserType[]>([]);
+  const [notDiscord, setNotDiscord] = useState<string>("");
 
   const [user] = useAuthState(auth);
 
@@ -92,17 +77,55 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const onlineUserRef = collection(db, "onlineUsers");
+    const onlineUserQuery = query(onlineUserRef);
+
+    const unsubOnlineUsers = onSnapshot(onlineUserQuery, (querySnapshot) => {
+      const onlineUsers: OnlineUserType[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        onlineUsers.push({
+          id: doc.id,
+          userId: data.userId,
+          userName: data.userName,
+          avatar: data.avatar,
+        });
+      });
+      setOnlineUsers(onlineUsers);
+    });
+    return () => {
+      unsubOnlineUsers();
+    };
+  }, []);
+
+  useEffect(() => {
     const serverRef = collection(db, "servers");
     const serverQuery = query(serverRef);
 
     const unsubServers = onSnapshot(serverQuery, (querySnapshot) => {
       const servers: ServerType[] = [];
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        servers.push({ id: doc.id, name: data.name, icon: data.icon });
-      });
-      setServerList(servers);
-      if (!server) setServer(servers[0]);
+
+      const asyncLoop = async () => {
+        for (let i = 0; i < querySnapshot.docs.length; i++) {
+          const data = querySnapshot.docs[i].data();
+
+          const url = await getDownloadURL(
+            ref(storage, `images/${data.name.toLowerCase()}.jpg`)
+          );
+          servers.push({
+            id: querySnapshot.docs[i].id,
+            name: data.name,
+            icon: url,
+          });
+        }
+        const notDiscordUrl = await getDownloadURL(
+          ref(storage, `images/notdiscord.jpg`)
+        );
+        setNotDiscord(notDiscordUrl);
+        setServerList(servers);
+        if (!server) setServer(servers[0]);
+      };
+      asyncLoop();
     });
     return () => {
       unsubServers();
@@ -181,14 +204,42 @@ function App() {
     await addDoc(collection(db, path), data);
   };
 
+  const handleSignOut = () => {
+    const userData = auth?.currentUser?.providerData.find(
+      (el: Record<string, any>) => el.providerId === "google.com"
+    );
+    const userDocId = onlineUsers.find((el) => el.userId === userData?.uid)?.id;
+    signOut(auth);
+    deleteDoc(doc(db, `onlineUsers/${userDocId}`));
+  };
+
+  const signInWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+      .then((result) => {
+        const userData = result.user.providerData.find(
+          (el: Record<string, any>) => el.providerId === "google.com"
+        );
+        addDoc(collection(db, "onlineUsers"), {
+          userId: userData?.uid,
+          userName: userData?.displayName,
+          avatar: userData?.photoURL,
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
   return (
     <div
       className="App"
       style={{ height: dimensions?.height, width: dimensions?.width }}
     >
-      {!user ? (
+      {user ? (
         <div style={{ display: "flex" }}>
           <ServerList
+            icon={notDiscord}
             serverList={serverList}
             server={server}
             setServer={setServer}
@@ -198,16 +249,20 @@ function App() {
             server={server}
             channel={channel}
             setChannel={setChannel}
+            user={user}
+            signOut={handleSignOut}
           />
           <ChatWindow
             messages={messageList}
             addMessage={addMessage}
             channel={channel}
             server={server}
+            user={user}
+            onlineUsers={onlineUsers}
           />
         </div>
       ) : (
-        <SignIn />
+        <SignIn signInWithGoogle={signInWithGoogle} />
       )}
     </div>
   );

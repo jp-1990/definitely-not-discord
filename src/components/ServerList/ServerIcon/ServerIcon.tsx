@@ -4,9 +4,10 @@ import styles from "./ServerIcon.module.css";
 interface Props {
   selected?: boolean;
   onClick: () => void;
+  url?: string;
 }
 
-const ServerIcon: React.FC<Props> = ({ selected, onClick }) => {
+const ServerIcon: React.FC<Props> = ({ selected, onClick, url }) => {
   return (
     <div className={styles.container}>
       <button
@@ -16,7 +17,9 @@ const ServerIcon: React.FC<Props> = ({ selected, onClick }) => {
         }}
         className={styles.icon}
         onClick={onClick}
-      />
+      >
+        <img src={url} />
+      </button>
       {selected && <div className={styles.selectedTag} />}
     </div>
   );

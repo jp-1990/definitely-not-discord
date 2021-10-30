@@ -3,12 +3,23 @@
 }
 
 .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   border: none;
   background-color: #36393f;
   height: 48px;
   width: 48px;
   margin: 0px 12px 8px 12px;
+  overflow: hidden;
+}
+
+.icon img {
+  cursor: pointer;
+  border: none;
+  height: 48px;
+  width: 48px;
 }
 
 .selectedTag {

@@ -1,2 +1,2 @@
 export { default } from "./ChatWindow";
-export type { MessageType } from "./ChatWindow";
+export type { MessageType, OnlineUserType } from "./ChatWindow";
