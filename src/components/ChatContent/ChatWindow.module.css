@@ -44,7 +44,7 @@
 }
 
 .chatContentOuter {
-  height: 860px;
+  height: 858px;
   width: 100%;
   display: flex;
 }
@@ -52,15 +52,18 @@
 .chatContentInner {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   overflow-y: auto;
   width: 100%;
+  padding-top: 12px;
+}
+
+.chatContentInner > :first-child {
+  margin-top: auto !important;
 }
 
 .chatContentInner article {
   position: relative;
-
-  padding: 2px 48px 2px 72px;
+  padding: 2px 48px 0px 72px;
   margin-top: 17px;
   display: flex;
   flex-direction: column;
@@ -72,6 +75,16 @@
   font-weight: 400;
   font-size: 14px;
   padding: 2px 0;
+}
+
+.messageText {
+  padding: 0px 48px 2px 72px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  color: #dcddde;
+  font-weight: 400;
+  font-size: 14px;
 }
 
 .chatContentInner article div {
@@ -108,22 +121,22 @@
 }
 
 .scrollSpacer {
-  height: 30px;
+  min-height: 30px;
   width: 1px;
 }
 
 /* width */
-::-webkit-scrollbar {
+.chatContentInner::-webkit-scrollbar {
   width: 16px;
   height: 16px;
 }
 
-::-webkit-scrollbar-corner {
+.chatContentInner::-webkit-scrollbar-corner {
   background-color: transparent;
 }
 
 /* Track */
-::-webkit-scrollbar-track {
+.chatContentInner::-webkit-scrollbar-track {
   border: 4px solid;
   border-color: #36393e;
   background-clip: padding-box;
@@ -134,7 +147,7 @@
 }
 
 /* Handle */
-::-webkit-scrollbar-thumb {
+.chatContentInner::-webkit-scrollbar-thumb {
   background: #202225;
   min-height: 40px;
   border-radius: 10px;

@@ -12,6 +12,7 @@ const ChatContent: React.FC<Props> = ({ children }) => {
         flex: 1,
         flexDirection: "column",
         backgroundColor: "#36393e",
+        height: window.innerHeight - 49,
       }}
     >
       {children}

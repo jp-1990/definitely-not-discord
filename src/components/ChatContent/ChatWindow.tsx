@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FormEvent, useState, useRef, useEffect } from "react";
 import {
   BsPlusCircleFill,
   BsFillEmojiSmileFill,
@@ -14,9 +14,89 @@ import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 import { ChatContent, ChatHeader, UserList } from "./Layout";
 import styles from "./ChatWindow.module.css";
 
-const ChatWindow = () => {
-  const selected = true;
-  const title = "general";
+export interface MessageType {
+  id: string;
+  userId: string;
+  userName: string;
+  avatar?: string;
+  date: string;
+  message: string;
+}
+
+interface Props {
+  channel: { id: string; name: string; server: string } | undefined;
+  server: { id: string; name: string } | undefined;
+  messages: Record<string, MessageType[]>;
+  addMessage: (path: string, data: Omit<MessageType, "id">) => void;
+}
+
+const ChatWindow: React.FC<Props> = ({
+  messages,
+  channel,
+  server,
+  addMessage,
+}) => {
+  const [textInput, setTextInput] = useState<string>("");
+  // const [messages, setMessages] = useState<Message[]>([]);
+
+  const scrollSpacerRef = useRef<HTMLDivElement>(null);
+
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!textInput) return;
+
+    addMessage(`servers/${server?.id}/channels/${channel?.id}/messages`, {
+      userId: "0",
+      userName: "jp",
+      date: `${Date.now()}`,
+      message: textInput,
+    });
+    // setMessages((prev) => {
+    //   return [
+    //     ...prev,
+    //     {
+    //       id: prev[messages.length - 1]?.id + 1 || 0,
+    //       userId: 0,
+    //       userName: "jp",
+    //       avatar: undefined,
+    //       date: new Date(Date.now()),
+    //       message: textInput,
+    //       channel: channel?.id || "",
+    //       server: server?.id || "",
+    //     },
+    //   ];
+    // });
+    setTextInput("");
+  };
+
+  const renderMessages = (() => {
+    if (!channel) return;
+    if (!messages[channel.id]) return;
+
+    return messages[channel.id].map((el, i) => {
+      if (el.userId === messages[channel.id][i - 1]?.userId)
+        return (
+          <span key={el.id} className={styles.messageText}>
+            {el.message}
+          </span>
+        );
+      return (
+        <article key={el.id}>
+          <div className={styles.messageAvatar} />
+          <div className={styles.messageAuthor}>
+            <h4>{el.userName}</h4>
+            <span>Today at {}</span>
+          </div>
+          <span className={styles.messageText}>{el.message}</span>
+        </article>
+      );
+    });
+  })();
+
+  useEffect(() => {
+    scrollSpacerRef && scrollSpacerRef.current?.scrollIntoView();
+  }, [messages]);
+
   return (
     <div
       style={{
@@ -49,10 +129,10 @@ const ChatWindow = () => {
             style={{
               fontSize: "16px",
               fontWeight: 600,
-              color: selected ? "#fff" : "#72767d",
+              color: "#fff",
             }}
           >
-            {title}
+            {channel?.name}
           </h3>
         </div>
         <ul className={styles.iconList}>
@@ -84,29 +164,22 @@ const ChatWindow = () => {
       </ChatHeader>
       <div style={{ display: "flex" }}>
         <ChatContent>
-          <main className={styles.chatContentOuter}>
+          <main
+            className={styles.chatContentOuter}
+            style={{ height: window.innerHeight - 49 - 44 - 24 }}
+          >
             <div className={styles.chatContentInner}>
-              <article>
-                <div className={styles.messageAvatar} />
-                <div className={styles.messageAuthor}>
-                  <h4>jp</h4>
-                  <span>Today at 4:11PM</span>
-                </div>
-                <span>
-                  That is exactly what I didn't want my skills to be looking
-                  like after 4 years haha
-                </span>
-                <span>started cloning discord last night</span>
-              </article>
-
-              <div className={styles.scrollSpacer} />
+              {renderMessages}
+              <div className={styles.scrollSpacer} ref={scrollSpacerRef} />
             </div>
           </main>
-          <form className={styles.messageInputForm}>
+          <form className={styles.messageInputForm} onSubmit={onSubmit}>
             <button className={styles.messageAddFileButton}>
               <BsPlusCircleFill size="22px" color="#b9bbbe" />
             </button>
             <input
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
               placeholder={`Message #general`}
               className={styles.messageBarInput}
             />

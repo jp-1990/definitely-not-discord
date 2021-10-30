@@ -2,12 +2,19 @@ import React, { Dispatch, SetStateAction } from "react";
 import { default as Layout } from "./Layout";
 import ServerIcon from "./ServerIcon";
 
-interface Props {
-  server?: { id: string; name: string };
-  setServer: Dispatch<SetStateAction<{ id: string; name: string } | undefined>>;
+export interface ServerType {
+  id: string;
+  name: string;
+  icon: string;
 }
 
-const ServerList: React.FC<Props> = ({ server, setServer }) => {
+interface Props {
+  serverList: ServerType[];
+  server?: Omit<ServerType, "icon">;
+  setServer: Dispatch<SetStateAction<Omit<ServerType, "icon"> | undefined>>;
+}
+
+const ServerList: React.FC<Props> = ({ serverList, server, setServer }) => {
   const temp = [
     { name: "happy codey friends", id: "0" },
     { name: "Mumble 2.0", id: "1" },
@@ -18,7 +25,7 @@ const ServerList: React.FC<Props> = ({ server, setServer }) => {
   // get list of servers
   // map, return components
   // selected = id === server || [0]
-  const servers = temp.map((el, i) => {
+  const servers = serverList.map((el, i) => {
     let selected;
     if (!server) {
       selected = i === 0;
@@ -27,7 +34,7 @@ const ServerList: React.FC<Props> = ({ server, setServer }) => {
     }
     const onClick = () => setServer(el);
 
-    return <ServerIcon selected={selected} onClick={onClick} />;
+    return <ServerIcon key={el.id} selected={selected} onClick={onClick} />;
   });
 
   return <Layout>{servers}</Layout>;
