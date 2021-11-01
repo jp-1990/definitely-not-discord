@@ -18,7 +18,7 @@ export interface ChannelType {
 }
 
 interface Props {
-  channelList: Record<string, ChannelType[]>;
+  channelList: ChannelType[];
   server: { id: string; name: string } | undefined;
   channel: { id: string; name: string; server: string } | undefined;
   setChannel: Dispatch<
@@ -38,24 +38,25 @@ const ChannelList: React.FC<Props> = ({
 }) => {
   const channels = (() => {
     if (!server) return;
-    if (!channelList[server.id]) return;
     if (!channel || channel.server !== server.id)
-      setChannel(channelList[server.id][0]);
+      setChannel(channelList.filter((el) => el.server === server.id)[0]);
 
-    return channelList[server.id].map((el) => {
-      const selected = channel?.id === el.id;
+    return channelList
+      .filter((el) => el.server === server.id)
+      .map((el) => {
+        const selected = channel?.id === el.id;
 
-      const onClick = () => setChannel(el);
+        const onClick = () => setChannel(el);
 
-      return (
-        <Channel
-          key={el.id}
-          selected={selected}
-          title={el.name}
-          onClick={onClick}
-        />
-      );
-    });
+        return (
+          <Channel
+            key={el.id}
+            selected={selected}
+            title={el.name}
+            onClick={onClick}
+          />
+        );
+      });
   })();
 
   return (

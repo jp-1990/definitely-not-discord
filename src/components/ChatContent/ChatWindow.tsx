@@ -21,14 +21,15 @@ export interface MessageType {
   avatar?: string;
   date: string;
   message: string;
+  channel: string;
 }
 
-export type OnlineUserType = Omit<MessageType, "date" | "message">;
+export type OnlineUserType = Omit<MessageType, "date" | "message" | "channel">;
 
 interface Props {
   channel: { id: string; name: string; server: string } | undefined;
   server: { id: string; name: string } | undefined;
-  messages: Record<string, MessageType[]>;
+  messages: MessageType[];
   addMessage: (path: string, data: Omit<MessageType, "id">) => void;
   user: any;
   onlineUsers: OnlineUserType[];
@@ -61,22 +62,9 @@ const ChatWindow: React.FC<Props> = ({
       date: `${Date.now()}`,
       message: textInput,
       avatar: userData.photoURL,
+      channel: channel?.id || "",
     });
-    // setMessages((prev) => {
-    //   return [
-    //     ...prev,
-    //     {
-    //       id: prev[messages.length - 1]?.id + 1 || 0,
-    //       userId: 0,
-    //       userName: "jp",
-    //       avatar: undefined,
-    //       date: new Date(Date.now()),
-    //       message: textInput,
-    //       channel: channel?.id || "",
-    //       server: server?.id || "",
-    //     },
-    //   ];
-    // });
+
     setTextInput("");
   };
 
@@ -100,10 +88,9 @@ const ChatWindow: React.FC<Props> = ({
 
   const renderMessages = (() => {
     if (!channel) return;
-    if (!messages[channel.id]) return;
-
-    return messages[channel.id].map((el, i) => {
-      if (el.userId === messages[channel.id][i - 1]?.userId)
+    const channelMessages = messages.filter((e) => e.channel === channel.id);
+    return channelMessages.map((el, i) => {
+      if (el.userId === channelMessages[i - 1]?.userId)
         return (
           <span key={el.id} className={styles.messageText}>
             {el.message}
