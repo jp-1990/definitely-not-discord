@@ -1,78 +1,87 @@
-import React, { Dispatch, SetStateAction } from "react";
-import { default as Layout } from "./Layout/ChannelList";
-import Header from "./Header";
-import ChannelGroup from "./ChannelGroup";
-import Channel from "./Channel";
-import Footer from "./Footer";
+import React, { useState } from "react";
+import { IoMdMic, IoMdSettings } from "react-icons/io";
+import { BsHeadphones } from "react-icons/bs";
 
-enum ChannelTypeEnum {
-  VOICE = "VOICE",
-  TEXT = "TEXT",
-}
+import styles from "./ChannelList.module.css";
 
-export interface ChannelType {
-  id: string;
-  name: string;
-  type: ChannelTypeEnum;
-  server: string;
+interface WidthHeight {
+  width: number;
+  height: number;
 }
 
 interface Props {
-  channelList: ChannelType[];
-  server: { id: string; name: string } | undefined;
-  channel: { id: string; name: string; server: string } | undefined;
-  setChannel: Dispatch<
-    SetStateAction<{ id: string; name: string; server: string } | undefined>
-  >;
+  serverName: string;
   user: any;
   signOut: () => void;
+  dimensions: WidthHeight;
 }
 
 const ChannelList: React.FC<Props> = ({
-  channelList,
-  server,
-  channel,
-  setChannel,
+  serverName,
   user,
   signOut,
+  dimensions,
+  children,
 }) => {
-  const channels = (() => {
-    if (!server) return;
-    if (!channel || channel.server !== server.id)
-      setChannel(channelList.filter((el) => el.server === server.id)[0]);
+  const [signOutOpen, setSignOutOpen] = useState<boolean>(false);
+  const userData = user.providerData.find(
+    (el: Record<string, any>) => el.providerId === "google.com"
+  );
 
-    return channelList
-      .filter((el) => el.server === server.id)
-      .map((el) => {
-        const selected = channel?.id === el.id;
-
-        const onClick = () => setChannel(el);
-
-        return (
-          <Channel
-            key={el.id}
-            selected={selected}
-            title={el.name}
-            onClick={onClick}
-          />
-        );
-      });
-  })();
+  const toggleOpenSignOut = () => {
+    setSignOutOpen((prev) => !prev);
+  };
 
   return (
-    <Layout>
-      <Header>
-        <span>{server?.name}</span>
-      </Header>
-      <ChannelGroup title="TEXT CHANNELS" expanded>
-        {channels}
-      </ChannelGroup>
-      {/* <ChannelGroup title="VOICE CHANNELS" expanded>
-        <Channel title="General" />
-      </ChannelGroup> */}
+    <section
+      style={{
+        height: dimensions.height,
+      }}
+      className={styles.container}
+    >
+      <header>
+        <span>{serverName}</span>
+      </header>
+      {children}
+
       <div style={{ flexGrow: 1 }} />
-      <Footer signOut={signOut} user={user} />
-    </Layout>
+      <footer>
+        {signOutOpen && (
+          <div className={styles.logoutContainer}>
+            <button type="button" onClick={signOut}>
+              Log Out
+            </button>
+          </div>
+        )}
+        <div className={styles.userDetailsContainer}>
+          <div className={styles.userImageContainer}>
+            <img src={userData.photoURL} alt="user profile image" />
+            <div className={styles.userOnlineIcon} />
+          </div>
+          <div className={styles.userTextContainer}>
+            <span className={styles.userDisplayName}>
+              {userData.displayName}
+            </span>
+            <span className={styles.userNumber}>#0110</span>
+          </div>
+        </div>
+        <div className={styles.iconContainer}>
+          <div className={styles.icon}>
+            <IoMdMic fill="#b9bbbe" size="20px" />
+          </div>
+          <div className={styles.icon}>
+            <BsHeadphones fill="#b9bbbe" size="22px" />
+          </div>
+          <div
+            className={styles.icon}
+            role="button"
+            onClick={toggleOpenSignOut}
+          >
+            <IoMdSettings fill="#b9bbbe" size="22px" />
+          </div>
+        </div>
+      </footer>
+    </section>
   );
 };
 

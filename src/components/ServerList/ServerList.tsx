@@ -1,56 +1,33 @@
-import React, { Dispatch, SetStateAction } from "react";
-import { default as Layout } from "./Layout";
-import ServerIcon from "./ServerIcon";
+import React from "react";
+import styles from "./ServerList.module.css";
 
-export interface ServerType {
-  id: string;
-  name: string;
-  icon: string;
+interface WidthHeight {
+  width: number;
+  height: number;
 }
 
 interface Props {
-  serverList: ServerType[];
-  server?: Omit<ServerType, "icon">;
-  setServer: Dispatch<SetStateAction<Omit<ServerType, "icon"> | undefined>>;
   icon: string;
+  dimensions: WidthHeight;
 }
 
-const ServerList: React.FC<Props> = ({
-  serverList,
-  server,
-  setServer,
-  icon,
-}) => {
-  const temp = [
-    { name: "happy codey friends", id: "0" },
-    { name: "Mumble 2.0", id: "1" },
-    { name: "nor(DEV)", id: "2" },
-    { name: "Valorant", id: "3" },
-    { name: "!Discord", id: "4" },
-  ];
-  // get list of servers
-  // map, return components
-  // selected = id === server || [0]
-  const servers = serverList.map((el, i) => {
-    let selected;
-    if (!server) {
-      selected = i === 0;
-    } else {
-      selected = server.id === el.id;
-    }
-    const onClick = () => setServer(el);
-
-    return (
-      <ServerIcon
-        key={el.id}
-        selected={selected}
-        onClick={onClick}
-        url={el.icon}
-      />
-    );
-  });
-
-  return <Layout icon={icon}>{servers}</Layout>;
+const ServerList: React.FC<Props> = ({ icon, dimensions, children }) => {
+  return (
+    <nav
+      className={styles.container}
+      style={{
+        height: dimensions.height,
+      }}
+    >
+      <header>
+        <div className={styles.iconContainer}>
+          <img src={icon} alt="Not discord icon" />
+        </div>
+        <div className={styles.divider} />
+      </header>
+      {children}
+    </nav>
+  );
 };
 
 export default ServerList;

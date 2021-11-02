@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./Channel.module.css";
 
 interface Props {
   selected?: boolean;
@@ -10,25 +11,15 @@ const Channel: React.FC<Props> = ({ selected, title, onClick }) => {
   return (
     <button
       onClick={onClick}
+      className={styles.button}
       style={{
-        border: "none",
-        height: "32px",
-        width: "208px",
-        marginLeft: "8px",
-        padding: "1px 8px 1px 8px",
         backgroundColor: selected ? "rgb(79 84 92 / 32%)" : "transparent",
-        borderRadius: "5px",
-        display: "flex",
-        alignItems: "center",
       }}
     >
-      <span style={{ marginRight: "8px", fontSize: "22px", color: "#72767d" }}>
-        #
-      </span>
+      <span className={styles.icon}>#</span>
       <span
+        className={styles.text}
         style={{
-          fontSize: "14px",
-          fontWeight: 600,
           color: selected ? "#fff" : "#72767d",
         }}
       >

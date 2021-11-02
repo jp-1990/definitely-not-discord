@@ -86,7 +86,7 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
         channels.push({
           name: data.name,
           id: doc.id,
-          type: data.type,
+          type: data.type.toUpperCase(),
           server: doc.ref.parent.parent?.id || "",
         });
       });

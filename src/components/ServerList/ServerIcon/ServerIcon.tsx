@@ -18,7 +18,7 @@ const ServerIcon: React.FC<Props> = ({ selected, onClick, url }) => {
         className={styles.icon}
         onClick={onClick}
       >
-        <img src={url} />
+        <img src={url} alt="server icon" />
       </button>
       {selected && <div className={styles.selectedTag} />}
     </div>

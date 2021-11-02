@@ -1,0 +1,38 @@
+.container {
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  background-color: #202225;
+}
+
+.container header {
+  width: 72px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.iconContainer {
+  background-color: #36393f;
+  border-radius: 100%;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 8px;
+}
+
+.iconContainer img {
+  border-radius: 100%;
+  height: 48px;
+  width: 48px;
+  margin-bottom: 8px;
+}
+
+.divider {
+  height: 2px;
+  width: 32px;
+  background-color: hsla(0, 0%, 100%, 0.06);
+  border-radius: 2px;
+  margin-bottom: 8px;
+}

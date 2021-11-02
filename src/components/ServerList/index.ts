@@ -1,2 +1,3 @@
 export { default } from "./ServerList";
-export type { ServerType } from "./ServerList";
+
+export { default as ServerIcon } from "./ServerIcon";
