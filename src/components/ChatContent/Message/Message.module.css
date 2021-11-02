@@ -1,0 +1,27 @@
+.messageText {
+  padding: 0px 48px 2px 72px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  color: #dcddde;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.messageAvatar {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  top: 2px;
+  left: 16px;
+  margin-top: 2px;
+  border-radius: 100%;
+  background-color: #fff;
+}
+
+.messageAvatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 100%;
+  background-color: #fff;
+}

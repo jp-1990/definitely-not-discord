@@ -11,7 +11,6 @@ import { AiOutlineGif, AiFillFile } from "react-icons/ai";
 import { RiPushpinFill } from "react-icons/ri";
 import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 
-import { ChatContent, ChatHeader, UserList } from "./Layout";
 import styles from "./ChatWindow.module.css";
 
 export interface MessageType {
@@ -29,24 +28,20 @@ export type OnlineUserType = Omit<MessageType, "date" | "message" | "channel">;
 interface Props {
   channel: { id: string; name: string; server: string } | undefined;
   server: { id: string; name: string } | undefined;
-  messages: MessageType[];
   addMessage: (path: string, data: Omit<MessageType, "id">) => void;
   user: any;
   onlineUsers: OnlineUserType[];
 }
 
 const ChatWindow: React.FC<Props> = ({
-  messages,
   channel,
   server,
   addMessage,
   user,
   onlineUsers,
+  children,
 }) => {
   const [textInput, setTextInput] = useState<string>("");
-  // const [messages, setMessages] = useState<Message[]>([]);
-
-  const scrollSpacerRef = useRef<HTMLDivElement>(null);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -86,75 +81,12 @@ const ChatWindow: React.FC<Props> = ({
       );
     });
 
-  const renderMessages = (() => {
-    if (!channel) return;
-    const channelMessages = messages.filter((e) => e.channel === channel.id);
-    return channelMessages.map((el, i) => {
-      if (el.userId === channelMessages[i - 1]?.userId)
-        return (
-          <span key={el.id} className={styles.messageText}>
-            {el.message}
-          </span>
-        );
-      return (
-        <article key={el.id}>
-          <div className={styles.messageAvatar}>
-            {el.avatar && <img src={el.avatar} />}
-          </div>
-          <div className={styles.messageAuthor}>
-            <h4>{el.userName}</h4>
-            <span>
-              {new Date(+el.date).toDateString()} at{" "}
-              {new Date(+el.date).getHours()}:{new Date(+el.date).getMinutes()}
-            </span>
-          </div>
-          <span className={styles.messageText}>{el.message}</span>
-        </article>
-      );
-    });
-  })();
-
-  useEffect(() => {
-    scrollSpacerRef && scrollSpacerRef.current?.scrollIntoView();
-  }, [messages]);
-
   return (
-    <div
-      style={{
-        display: "flex",
-        flex: 1,
-        flexDirection: "column",
-      }}
-    >
-      <ChatHeader>
-        <div
-          style={{
-            height: "32px",
-            width: "208px",
-            borderRadius: "5px",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <span
-            style={{
-              marginRight: "8px",
-              marginLeft: "8px",
-              fontSize: "22px",
-              color: "#72767d",
-            }}
-          >
-            #
-          </span>
-          <h3
-            style={{
-              fontSize: "16px",
-              fontWeight: 600,
-              color: "#fff",
-            }}
-          >
-            {channel?.name}
-          </h3>
+    <section className={styles.container}>
+      <header>
+        <div className={styles.titleContainer}>
+          <span>#</span>
+          <h3>{channel?.name}</h3>
         </div>
         <ul className={styles.iconList}>
           <li className={styles.icon}>
@@ -182,17 +114,14 @@ const ChatWindow: React.FC<Props> = ({
             <MdOutlineHelp size="24px" color="#b9bbbe" />
           </li>
         </ul>
-      </ChatHeader>
+      </header>
       <div style={{ display: "flex" }}>
-        <ChatContent>
+        <div className={styles.chatContentContainer}>
           <main
             className={styles.chatContentOuter}
             style={{ height: window.innerHeight - 49 - 44 - 24 }}
           >
-            <div className={styles.chatContentInner}>
-              {renderMessages}
-              <div className={styles.scrollSpacer} ref={scrollSpacerRef} />
-            </div>
+            <div className={styles.chatContentInner}>{children}</div>
           </main>
           <form className={styles.messageInputForm} onSubmit={onSubmit}>
             <button className={styles.messageAddFileButton}>
@@ -221,15 +150,20 @@ const ChatWindow: React.FC<Props> = ({
               </li>
             </ul>
           </form>
-        </ChatContent>
-        <UserList>
+        </div>
+        <aside
+          style={{
+            height: window.innerHeight - 49,
+          }}
+          className={styles.userListContainer}
+        >
           <div className={styles.userList} role="list">
             <h2>ONLINE - {onlineUsers.length}</h2>
             {renderOnlineUsers}
           </div>
-        </UserList>
+        </aside>
       </div>
-    </div>
+    </section>
   );
 };
 

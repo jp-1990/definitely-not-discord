@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import firebase from "firebase/app";
 import { collection, addDoc } from "firebase/firestore";
 import {
@@ -9,11 +9,11 @@ import {
   useWindowSize,
 } from "./hooks";
 
-import { buildServersJSX, buildChannelsJSX } from "./utils";
+import { buildServersJSX, buildMessagesJSX, buildChannelsJSX } from "./utils";
 
 import ServerList from "./components/ServerList";
 import ChannelList from "./components/ChannelList";
-import ChatWindow, { MessageType } from "./components/ChatContent";
+import ChatWindow, { MessageType, Message } from "./components/ChatContent";
 import SignIn from "./components/SignIn";
 import "./App.css";
 import ChannelGroup from "./components/ChannelList/ChannelGroup";
@@ -29,6 +29,8 @@ interface ChannelState extends ServerState {
 function App() {
   const [server, setServer] = useState<ServerState>();
   const [channel, setChannel] = useState<ChannelState>();
+
+  const scrollSpacerRef = useRef<HTMLDivElement>(null);
 
   // firebase instances, subscriptions and auth
   const { db, auth, storage } = useFirebase();
@@ -51,11 +53,16 @@ function App() {
       setChannel(channels.find((el) => el.server === server?.id));
   }, [server, channel]);
 
+  // scroll chat on new message
+  useEffect(() => {
+    scrollSpacerRef && scrollSpacerRef.current?.scrollIntoView();
+  }, [messages]);
+
   const addMessage = async (path: string, data: Omit<MessageType, "id">) => {
     await addDoc(collection(db, path), data);
   };
 
-  // build servers and channels jsx
+  // build servers, messages and channels jsx
   const { SERVERS } = buildServersJSX({ servers, server, setServer });
   const { TEXT, VOICE } = buildChannelsJSX({
     channels,
@@ -63,6 +70,7 @@ function App() {
     channel,
     setChannel,
   });
+  const { MESSAGES } = buildMessagesJSX({ channel, messages });
 
   return (
     <div
@@ -92,13 +100,15 @@ function App() {
             )}
           </ChannelList>
           <ChatWindow
-            messages={messages}
             addMessage={addMessage}
             channel={channel}
             server={server}
             user={user}
             onlineUsers={onlineUsers}
-          />
+          >
+            {MESSAGES}
+            <div className="scrollSpacer" ref={scrollSpacerRef} />
+          </ChatWindow>
         </div>
       ) : (
         <SignIn signInWithGoogle={signInWithGoogle} />
