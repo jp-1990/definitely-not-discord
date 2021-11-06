@@ -1,8 +1,19 @@
 import React, { useState } from "react";
 import { IoMdMic, IoMdSettings } from "react-icons/io";
-import { BsHeadphones } from "react-icons/bs";
+import { BsHeadphones, BsFillTelephoneXFill } from "react-icons/bs";
+import { FaVideo } from "react-icons/fa";
+import { MdScreenShare } from "react-icons/md";
+import { AiFillSignal } from "react-icons/ai";
 
 import styles from "./ChannelList.module.css";
+
+interface ServerState {
+  id: string;
+  name: string;
+}
+interface ChannelState extends ServerState {
+  server: string;
+}
 
 interface WidthHeight {
   width: number;
@@ -10,15 +21,19 @@ interface WidthHeight {
 }
 
 interface Props {
-  serverName: string;
+  server: ServerState | undefined;
+  voiceChannel: Omit<ChannelState, "name"> | undefined;
   user: any;
+  leaveVoice: () => void;
   signOut: () => void;
   dimensions: WidthHeight;
 }
 
 const ChannelList: React.FC<Props> = ({
-  serverName,
+  server,
+  voiceChannel,
   user,
+  leaveVoice,
   signOut,
   dimensions,
   children,
@@ -40,11 +55,37 @@ const ChannelList: React.FC<Props> = ({
       className={styles.container}
     >
       <header>
-        <span>{serverName}</span>
+        <span>{server?.name}</span>
       </header>
       {children}
-
       <div style={{ flexGrow: 1 }} />
+
+      {voiceChannel && (
+        <section className={styles.connectedContainer}>
+          <div className={styles.connectedTop}>
+            <div className={styles.connectedTextContainer}>
+              <div className={styles.connected}>
+                <AiFillSignal size="16px" />
+                <span>Voice Connected</span>
+              </div>
+              <span>General/Air</span>
+            </div>
+            <button className={styles.disconnectButton} onClick={leaveVoice}>
+              <BsFillTelephoneXFill size="32px" />
+            </button>
+          </div>
+          <div className={styles.connectedBottom}>
+            <button>
+              <FaVideo size="18px" />
+              <span>Video</span>
+            </button>
+            <button>
+              <MdScreenShare size="20px" />
+              <span>Screen</span>
+            </button>
+          </div>
+        </section>
+      )}
       <footer>
         {signOutOpen && (
           <div className={styles.logoutContainer}>

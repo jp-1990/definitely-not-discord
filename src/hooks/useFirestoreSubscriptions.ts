@@ -26,6 +26,7 @@ interface ChannelType {
   name: string;
   type: ChannelTypeEnum;
   server: string;
+  users?: OnlineUserType[];
 }
 
 interface MessageType {
@@ -88,6 +89,7 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
           id: doc.id,
           type: data.type.toUpperCase(),
           server: doc.ref.parent.parent?.id || "",
+          users: data.users,
         });
       });
       setChannelList(channels);
@@ -144,7 +146,6 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
       unsubOnlineUsers();
     };
   }, []);
-
   return {
     onlineUsers,
     servers: serverList,

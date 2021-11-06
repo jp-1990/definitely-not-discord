@@ -13,31 +13,22 @@ import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 
 import styles from "./ChatWindow.module.css";
 
-export interface MessageType {
+export interface OnlineUserType {
   id: string;
   userId: string;
   userName: string;
   avatar?: string;
-  date: string;
-  message: string;
-  channel: string;
 }
 
-export type OnlineUserType = Omit<MessageType, "date" | "message" | "channel">;
-
 interface Props {
+  sendMessage: (message: string) => void;
   channel: { id: string; name: string; server: string } | undefined;
-  server: { id: string; name: string } | undefined;
-  addMessage: (path: string, data: Omit<MessageType, "id">) => void;
-  user: any;
   onlineUsers: OnlineUserType[];
 }
 
 const ChatWindow: React.FC<Props> = ({
+  sendMessage,
   channel,
-  server,
-  addMessage,
-  user,
   onlineUsers,
   children,
 }) => {
@@ -46,20 +37,7 @@ const ChatWindow: React.FC<Props> = ({
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!textInput) return;
-
-    const userData = user.providerData.find(
-      (el: Record<string, any>) => el.providerId === "google.com"
-    );
-
-    addMessage(`servers/${server?.id}/channels/${channel?.id}/messages`, {
-      userId: userData.uid,
-      userName: userData.displayName,
-      date: `${Date.now()}`,
-      message: textInput,
-      avatar: userData.photoURL,
-      channel: channel?.id || "",
-    });
-
+    sendMessage(textInput);
     setTextInput("");
   };
 

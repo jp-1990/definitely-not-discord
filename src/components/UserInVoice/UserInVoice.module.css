@@ -1,0 +1,33 @@
+.userList {
+  padding-left: 36px;
+  padding-bottom: 8px;
+}
+
+.userList li {
+  width: 224px;
+  height: 32px;
+  padding: 0px 8px;
+  display: flex;
+  align-items: center;
+}
+
+.userListIcon {
+  width: 26px;
+  height: 26px;
+  margin-right: 12px;
+  border-radius: 100%;
+  background-color: #fff;
+  position: relative;
+}
+
+.userListIcon img {
+  width: 26px;
+  height: 26px;
+  border-radius: 100%;
+}
+
+.userList li span {
+  font-weight: 500;
+  font-size: 14px;
+  color: #8e9297;
+}

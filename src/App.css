@@ -46,3 +46,10 @@ button {
   min-height: 30px;
   width: 1px;
 }
+
+video {
+  width: 20vw;
+  height: 15vw;
+  margin: 2rem;
+  background: #2c3e50;
+}

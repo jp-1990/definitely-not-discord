@@ -1,5 +1,6 @@
 import React from "react";
 import Channel from "../components/ChannelList/Channel";
+import { UserInVoice, OnlineUserType } from "../components/UserInVoice";
 
 enum ChannelTypeEnum {
   VOICE = "VOICE",
@@ -10,36 +11,54 @@ interface ChannelType {
   name: string;
   type: ChannelTypeEnum;
   server: string;
+  users?: OnlineUserType[];
 }
 interface ServerState {
   id: string;
   name: string;
 }
-interface ChannelState extends ServerState {
+interface TextChannelState extends ServerState {
   server: string;
 }
 
 interface Args {
   channels: ChannelType[];
   server: ServerState | undefined;
-  channel: ChannelState | undefined;
-  setChannel: React.Dispatch<React.SetStateAction<ChannelState | undefined>>;
+  textChannel: TextChannelState | undefined;
+  setTextChannel: React.Dispatch<
+    React.SetStateAction<TextChannelState | undefined>
+  >;
+  joinVoice: (channelId: string, serverId: string) => void;
 }
 
-const buildChannelsJSX = ({ channels, server, channel, setChannel }: Args) => {
-  if (!server || !channel) return { TEXT: [], VOICE: [] };
+const buildChannelsJSX = ({
+  channels,
+  server,
+  textChannel,
+  setTextChannel,
+  joinVoice,
+}: Args) => {
+  if (!server || !textChannel) return { TEXT: [], VOICE: [] };
   return channels.reduce(
     (prev, cur) => {
       if (server.id === cur.server) {
-        const selected = channel.id === cur.id;
-        const onClick = () => setChannel(cur);
+        const selected = textChannel.id === cur.id;
+        const onTextClick = () => setTextChannel(cur);
+        const onVoiceClick = () => joinVoice(cur.id, server.id);
         prev[cur.type].push(
           <Channel
             key={cur.id}
             selected={selected}
             title={cur.name}
-            onClick={onClick}
-          />
+            type={cur.type}
+            onClick={cur.type === "TEXT" ? onTextClick : onVoiceClick}
+          >
+            {cur.users &&
+              cur.type === "VOICE" &&
+              cur.users.map((el) => (
+                <UserInVoice key={Math.random()} user={el} />
+              ))}
+          </Channel>
         );
         return prev;
       }
