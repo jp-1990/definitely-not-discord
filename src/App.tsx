@@ -174,7 +174,6 @@ function App() {
   const addMediaFeed = async (peerConnection: RTCPeerConnection) => {
     if (!peerConnection) return;
     localStream = await navigator.mediaDevices.getUserMedia({
-      video: false,
       audio: true,
     });
     remoteStream = new MediaStream();
@@ -398,17 +397,14 @@ function App() {
     >
       {user ? (
         <div style={{ display: "flex" }}>
-          {/* <button onClick={removeMediaFeed}>get tracks</button>
           <div className="videos">
             <span>
-              <h3>Local Stream</h3>
               <video id="webcamVideo" ref={local} autoPlay playsInline></video>
             </span>
             <span>
-              <h3>Remote Stream</h3>
               <video id="remoteVideo" ref={remote} autoPlay playsInline></video>
             </span>
-          </div> */}
+          </div>
           <ServerList dimensions={dimensions} icon={logo}>
             {SERVERS}
           </ServerList>
