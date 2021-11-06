@@ -398,7 +398,7 @@ function App() {
     >
       {user ? (
         <div style={{ display: "flex" }}>
-          <button onClick={removeMediaFeed}>get tracks</button>
+          {/* <button onClick={removeMediaFeed}>get tracks</button>
           <div className="videos">
             <span>
               <h3>Local Stream</h3>
@@ -408,7 +408,7 @@ function App() {
               <h3>Remote Stream</h3>
               <video id="remoteVideo" ref={remote} autoPlay playsInline></video>
             </span>
-          </div>
+          </div> */}
           <ServerList dimensions={dimensions} icon={logo}>
             {SERVERS}
           </ServerList>
