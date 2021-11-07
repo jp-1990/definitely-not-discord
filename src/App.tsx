@@ -99,8 +99,8 @@ function App() {
   const [peerConnection, setPeerConnection] = useState<
     RTCPeerConnection | undefined
   >();
-  const local = useRef<HTMLVideoElement>(null);
-  const remote = useRef<HTMLVideoElement>(null);
+  const local = useRef<HTMLAudioElement>(null);
+  const remote = useRef<HTMLAudioElement>(null);
 
   const STUNServers = {
     iceServers: [
@@ -399,10 +399,10 @@ function App() {
         <div style={{ display: "flex" }}>
           <div className="videos">
             <span>
-              <video id="webcamVideo" ref={local} autoPlay playsInline></video>
+              <audio muted id="audio" ref={local} autoPlay playsInline></audio>
             </span>
             <span>
-              <video id="remoteVideo" ref={remote} autoPlay playsInline></video>
+              <audio id="remoteAudio" ref={remote} autoPlay playsInline></audio>
             </span>
           </div>
           <ServerList dimensions={dimensions} icon={logo}>
