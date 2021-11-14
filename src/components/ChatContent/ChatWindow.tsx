@@ -11,6 +11,8 @@ import { AiOutlineGif, AiFillFile } from "react-icons/ai";
 import { RiPushpinFill } from "react-icons/ri";
 import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 
+import unknownUser from "../../assets/img/unknown-user.jpg";
+
 import styles from "./ChatWindow.module.css";
 
 export interface OnlineUserType {
@@ -25,6 +27,24 @@ interface Props {
   channel: { id: string; name: string; server: string } | undefined;
   onlineUsers: OnlineUserType[];
 }
+
+const OnlineUser = ({ user }: { user: OnlineUserType }) => {
+  const [imgSrc, setImgSrc] = useState<string | undefined>(user.avatar);
+  const setImageUndefined = () => setImgSrc(undefined);
+  return (
+    <li>
+      <div className={styles.userListIcon}>
+        {user.avatar && (
+          <div>
+            <img src={imgSrc || unknownUser} onError={setImageUndefined} />
+            <div className={styles.onlineMarker} />
+          </div>
+        )}
+      </div>
+      <span>{user.userName}</span>
+    </li>
+  );
+};
 
 const ChatWindow: React.FC<Props> = ({
   sendMessage,
@@ -44,19 +64,7 @@ const ChatWindow: React.FC<Props> = ({
   const renderOnlineUsers =
     onlineUsers &&
     onlineUsers.map((el) => {
-      return (
-        <li key={el.id}>
-          <div className={styles.userListIcon}>
-            {el.avatar && (
-              <div>
-                <img src={el.avatar} />
-                <div className={styles.onlineMarker} />
-              </div>
-            )}
-          </div>
-          <span>{el.userName}</span>
-        </li>
-      );
+      return <OnlineUser key={el.id} user={el} />;
     });
 
   return (

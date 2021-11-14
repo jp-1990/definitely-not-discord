@@ -96,7 +96,7 @@ const ChannelList: React.FC<Props> = ({
         )}
         <div className={styles.userDetailsContainer}>
           <div className={styles.userImageContainer}>
-            <img src={userData.photoURL} alt="user profile image" />
+            <img src={userData.photoURL} alt="" />
             <div className={styles.userOnlineIcon} />
           </div>
           <div className={styles.userTextContainer}>
