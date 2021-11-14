@@ -82,6 +82,7 @@ const App = () => {
   // ensure a server is always set
   useEffect(() => {
     if (!server) setServer(servers[0]);
+    setTextChannel(channels.find((el) => el.server === server?.id));
   }, [server, servers]);
 
   // ensure a channel is always set

@@ -9,6 +9,14 @@ import {
 import { updateDoc } from "firebase/firestore";
 
 //====================================================================
+const STUNServers = {
+  iceServers: [
+    {
+      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
+    },
+  ],
+  iceCandidatePoolSize: 10,
+};
 
 /**
  *
@@ -209,18 +217,6 @@ export const offerPeerConnection = async ({
   offerUser,
   answerUser,
 }: OfferPeerConnectionType) => {
-  const STUNServers = {
-    iceServers: [
-      {
-        urls: [
-          "stun:stun1.l.google.com:19302",
-          "stun:stun2.l.google.com:19302",
-        ],
-      },
-    ],
-    iceCandidatePoolSize: 10,
-  };
-
   let localStream: MediaStream;
   let remoteStream: MediaStream;
 
@@ -296,18 +292,6 @@ export const fullPeerConnection = async ({
   connectionPath,
   data,
 }: FullPeerConnectionType) => {
-  const STUNServers = {
-    iceServers: [
-      {
-        urls: [
-          "stun:stun1.l.google.com:19302",
-          "stun:stun2.l.google.com:19302",
-        ],
-      },
-    ],
-    iceCandidatePoolSize: 10,
-  };
-
   let localStream: MediaStream;
   let remoteStream: MediaStream;
 
@@ -349,3 +333,25 @@ export const fullPeerConnection = async ({
 };
 
 //====================================================================
+
+/**
+ *
+ * @param connection RTC peer connection to get audio level from
+ * @returns Number | 'no audio' string | undefined
+ *
+ * @description Uses getSynchronizationSources on the provided peer connection to determine the current audio level. It is intended that this function be called repeatedly to determine if a user is speaking.
+ */
+export const getAudioLevel = (connection: RTCPeerConnection) => {
+  try {
+    const receiver = connection
+      .getReceivers()
+      .find((e) => e.track.kind === "audio");
+    if (receiver && receiver.getSynchronizationSources) {
+      const source = receiver.getSynchronizationSources()[0];
+      if (source) return source.audioLevel;
+      return "no audio level received";
+    }
+  } catch (err) {
+    console.error(`failed to get audio level (getAudioLevel): ${err}`);
+  }
+};

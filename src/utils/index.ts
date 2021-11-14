@@ -11,4 +11,5 @@ export {
   setExistingAnswerToRemoteDescription,
   offerPeerConnection,
   fullPeerConnection,
+  getAudioLevel,
 } from "./webrtc-functions";

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./Message.module.css";
+import unknownUser from "../../../assets/img/unknown-user.jpg";
 
 interface Props {
   message: string;
@@ -10,6 +11,9 @@ interface Props {
 }
 
 const Message: React.FC<Props> = ({ message, id, avatar, userName, date }) => {
+  const [imgSrc, setImgSrc] = useState<string | undefined>(avatar);
+  const setImageUndefined = () => setImgSrc(undefined);
+
   if (!avatar || !date || !userName)
     return (
       <span key={id} className={styles.messageText}>
@@ -19,7 +23,7 @@ const Message: React.FC<Props> = ({ message, id, avatar, userName, date }) => {
   return (
     <article key={id}>
       <div className={styles.messageAvatar}>
-        {avatar && <img src={avatar} />}
+        <img src={imgSrc || unknownUser} onError={setImageUndefined} />
       </div>
       <div className={styles.messageAuthor}>
         <h4>{userName}</h4>

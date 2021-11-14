@@ -86,7 +86,6 @@ const usePeerConnection = ({ user, db, audioRefs }: Args) => {
       if (!user) return;
       const users = snapshot.data()?.users;
       // remove users who left
-      console.log({ audioRefs });
       if (users.length < connectedUsers.length) {
         const currentUsers = [...users.map((el: OnlineUserType) => el.userId)];
         const currentConnections = [...connections.current];
