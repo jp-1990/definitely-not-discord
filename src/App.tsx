@@ -18,9 +18,40 @@ import ChatWindow from "./components/ChatContent";
 import SignIn from "./components/SignIn";
 import "./App.css";
 import ChannelGroup from "./components/ChannelList/ChannelGroup";
+import {
+  CollectionReference,
+  doc,
+  DocumentData,
+  DocumentReference,
+  onSnapshot,
+  query,
+  setDoc,
+  where,
+} from "@firebase/firestore";
+import {
+  addDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
+  deleteDoc,
+  deleteField,
+  getDoc,
+  getDocs,
+  updateDoc,
+} from "firebase/firestore";
+
+import {
+  addLocalTracksToConnection,
+  getRemoteTracksFromConnection,
+  setIceCandidateToConnection,
+  setExistingAnswerToRemoteDescription,
+  createOffer,
+  answerOffer,
+  getAudioLevel,
+} from "./utils/webrtc-functions";
 
 interface UserData {
-  userId: string;
+  uid: string;
   userName: string;
   avatar?: string;
 }
@@ -38,16 +69,21 @@ const App = () => {
   const [voiceChannel, setVoiceChannel] = useState<
     Omit<ChannelState, "name"> & { user: UserData }
   >();
+  const [currentUser, setCurrentUser] = useState<UserData>({
+    uid: "",
+    userName: "",
+    avatar: "",
+  });
 
   const scrollSpacerRef = useRef<HTMLDivElement>(null);
-  const audioElementRefs = useRef<HTMLAudioElement[]>([]);
-  audioElementRefs.current = [];
+  // const audioElementRefs = useRef<HTMLAudioElement[]>([]);
+  // audioElementRefs.current = [];
 
-  const pushToRef = (el: HTMLAudioElement) => {
-    if (el && !audioElementRefs.current.includes(el)) {
-      audioElementRefs.current.push(el);
-    }
-  };
+  // const pushToRef = (el: HTMLAudioElement) => {
+  //   if (el && !audioElementRefs.current.includes(el)) {
+  //     audioElementRefs.current.push(el);
+  //   }
+  // };
 
   // =========================================================================================================
   // hooks
@@ -62,12 +98,19 @@ const App = () => {
   const loggedInUser = user?.providerData.find(
     (el) => el.providerId === "google.com"
   );
-  const { connect, disconnect, connections, connectionRefs, connectedUsers } =
-    usePeerConnection({
-      db,
-      user: loggedInUser,
-      audioRefs: audioElementRefs,
+  useEffect(() => {
+    setCurrentUser({
+      uid: loggedInUser?.uid || "",
+      userName: loggedInUser?.displayName || "",
+      avatar: loggedInUser?.photoURL || "",
     });
+  }, [loggedInUser]);
+  // const { connect, disconnect, connections, connectionRefs, connectedUsers } =
+  //   usePeerConnection({
+  //     db,
+  //     user: loggedInUser,
+  //     audioRefs: audioElementRefs,
+  //   });
 
   // messaging
   const { sendMessage } = useSendMessage({ server, textChannel, user, db });
@@ -96,86 +139,402 @@ const App = () => {
     scrollSpacerRef && scrollSpacerRef.current?.scrollIntoView();
   }, [messages]);
 
-  // apply streams to audio elements
-  useEffect(() => {
-    audioElementRefs.current.forEach((el) => {
-      const databaseConnectionRef = el.id.split("-")[0];
-      const mediaStreamType = el.id.split("-")[1];
+  // // apply streams to audio elements
+  // useEffect(() => {
+  //   audioElementRefs.current.forEach((el) => {
+  //     const databaseConnectionRef = el.id.split("-")[0];
+  //     const mediaStreamType = el.id.split("-")[1];
 
-      const targetConnection = connections.current.find(
-        (connection) => connection.connectionRef === databaseConnectionRef
-      );
-      if (!targetConnection) return;
-      if (mediaStreamType === "local" && targetConnection.localStream)
-        el.srcObject = targetConnection.localStream;
-      if (mediaStreamType === "remote" && targetConnection.remoteStream)
-        el.srcObject = targetConnection.remoteStream;
-    });
-  }, [connectionRefs]);
+  //     const targetConnection = connections.current.find(
+  //       (connection) => connection.connectionRef === databaseConnectionRef
+  //     );
+  //     if (!targetConnection) return;
+  //     if (mediaStreamType === "local" && targetConnection.localStream)
+  //       el.srcObject = targetConnection.localStream;
+  //     if (mediaStreamType === "remote" && targetConnection.remoteStream)
+  //       el.srcObject = targetConnection.remoteStream;
+  //   });
+  // }, [connectionRefs]);
+
+  // // =========================================================================================================
+  // // connect / disconnect voice chat functions
+
+  // const joinVoice = async (channelId: string, serverId: string) => {
+  //   // // disconnect from any existing voice channel
+
+  //   // set voice channel state
+  //   const loggedInUser = user?.providerData.find(
+  //     (el) => el.providerId === "google.com"
+  //   );
+  //   if (!loggedInUser) return;
+  //   const userData = {
+  //     userId: loggedInUser.uid,
+  //     userName: loggedInUser.displayName || "",
+  //     avatar: loggedInUser.photoURL || "",
+  //   };
+  //   setVoiceChannel({ id: channelId, server: serverId, user: userData });
+
+  //   // generate peer connections and media tracks
+  //   await connect(channelId, serverId);
+  // };
+
+  // const leaveVoice = async () => {
+  //   const mediaTracks: MediaStreamTrack[] = [];
+  //   audioElementRefs.current.forEach((ref) => {
+  //     const srcObject = ref.srcObject as MediaStream | null;
+  //     if (!srcObject) return;
+  //     const tracks = srcObject.getTracks();
+  //     tracks.forEach((track) => mediaTracks.push(track));
+  //   });
+  //   await disconnect({
+  //     connections,
+  //     mediaTracks,
+  //     voiceChannel,
+  //     setVoiceChannel,
+  //   });
+
+  //   audioElementRefs.current.forEach((ref) => (ref.srcObject = null));
+  //   audioElementRefs.current = [];
+  // };
+
+  // // =========================================================================================================
+  // // build audio elements
+
+  // const audioElements = connections.current.map((connection) => {
+  //   return (
+  //     <div key={connection.connectionRef} id={`${connection.connectionRef}`}>
+  //       <audio
+  //         id={`${connection.connectionRef}-local`}
+  //         ref={pushToRef}
+  //         muted
+  //         autoPlay
+  //         playsInline
+  //       />
+  //       <audio
+  //         id={`${connection.connectionRef}-remote`}
+  //         ref={pushToRef}
+  //         autoPlay
+  //         playsInline
+  //       />
+  //     </div>
+  //   );
+  // });
 
   // =========================================================================================================
-  // connect / disconnect voice chat functions
+  // -----------
+  // WEBRTC
+  // -----------
+  const [channelDatabaseRef, setChannelDatabaseRef] =
+    useState<DocumentReference<DocumentData>>();
+  const [answerCandidatesRef, setAnswerCandidatesRef] =
+    useState<CollectionReference<DocumentData>>();
+  const [offerCandidatesRef, setOfferCandidatesRef] =
+    useState<CollectionReference<DocumentData>>();
+
+  const [peerConnection, setPeerConnection] = useState<
+    RTCPeerConnection | undefined
+  >();
+  const local = useRef<HTMLAudioElement>(null);
+  const remote = useRef<HTMLAudioElement>(null);
+
+  // useEffect(() => {
+  //   if (connections && connections.length > 0) {
+  //     if (local && local.current)
+  //       // @ts-expect-error ???
+  //       local.current.srcObject = connections[0].localStream;
+
+  //     if (remote && remote.current)
+  //       // @ts-expect-error ???
+  //       remote.current.srcObject = connections[0].remoteStream;
+
+  //     console.log({ connections });
+  //   }
+  // }, [connections]);
+
+  const STUNServers = {
+    iceServers: [
+      {
+        urls: [
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+        ],
+      },
+    ],
+    iceCandidatePoolSize: 10,
+  };
+
+  // let peerConnection: RTCPeerConnection | undefined = undefined;
+  let localStream: MediaStream | undefined = undefined;
+  let remoteStream: MediaStream | undefined = undefined;
+
+  useEffect(() => {
+    // Listen for remote answer
+    let unsubVoiceChannel = () => {};
+    if (channelDatabaseRef && peerConnection) {
+      unsubVoiceChannel = onSnapshot(channelDatabaseRef, (doc) => {
+        const data = doc.data();
+        if (!peerConnection?.currentRemoteDescription && data?.answer) {
+          setExistingAnswerToRemoteDescription(peerConnection, data);
+        }
+      });
+    }
+    return () => {
+      unsubVoiceChannel();
+    };
+  }, [channelDatabaseRef, peerConnection]);
+
+  useEffect(() => {
+    // Listen for ICE answers
+    let unsubVoiceChannel = () => {};
+    if (answerCandidatesRef && peerConnection) {
+      unsubVoiceChannel = onSnapshot(answerCandidatesRef, (doc) => {
+        doc.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            setIceCandidateToConnection(peerConnection, change.doc.data());
+          }
+        });
+      });
+    }
+    return () => {
+      unsubVoiceChannel();
+    };
+  }, [answerCandidatesRef, peerConnection]);
+
+  useEffect(() => {
+    // Listen for ICE offers
+    let unsubVoiceChannel = () => {};
+    if (offerCandidatesRef && peerConnection) {
+      unsubVoiceChannel = onSnapshot(offerCandidatesRef, (doc) => {
+        doc.docChanges().forEach((change) => {
+          if (change.type === "added") {
+            setIceCandidateToConnection(peerConnection, change.doc.data());
+          }
+        });
+      });
+    }
+    return () => {
+      unsubVoiceChannel();
+    };
+  }, [offerCandidatesRef, peerConnection]);
+
+  // useEffect(() => {
+  //   let intervalId: NodeJS.Timer;
+  //   if (peerConnection) {
+  //     intervalId = setInterval(() => {
+  //       console.log(getAudioLevel(peerConnection));
+  //     }, 200);
+  //   }
+  //   return () => {
+  //     clearInterval(intervalId);
+  //   };
+  // }, [peerConnection]);
+
+  const removeMediaFeed = async () => {
+    // remove local tracks
+    if (local && local.current && local.current.srcObject) {
+      const srcObject = local.current.srcObject as MediaStream;
+      const tracks = srcObject.getTracks();
+      tracks.forEach((track) => track.stop());
+      local.current.srcObject = null;
+    }
+
+    // remove remote tracks
+    if (remote && remote.current && remote.current.srcObject) {
+      const srcObject = remote.current.srcObject as MediaStream;
+      const tracks = srcObject.getTracks();
+      tracks.forEach((track) => track.stop());
+      remote.current.srcObject = null;
+    }
+  };
+
+  const createConnectionOffer = async ({
+    channelId,
+    serverId,
+    peerConnection,
+  }: {
+    channelId: string;
+    serverId: string;
+    peerConnection: RTCPeerConnection | undefined;
+  }) => {
+    if (!peerConnection) return;
+
+    // firestore refs
+    const connectionRef = await addDoc(
+      collection(db, `servers/${serverId}/channels/${channelId}/connections`),
+      { offerUser: loggedInUser?.uid }
+    );
+    const offerCandidates = collection(
+      db,
+      connectionRef.path,
+      "offerCandidates"
+    );
+    const answerCandidates = collection(
+      db,
+      connectionRef.path,
+      "answerCandidates"
+    );
+    setChannelDatabaseRef(connectionRef);
+    setAnswerCandidatesRef(answerCandidates);
+
+    const { connection, localStream, remoteStream } = await createOffer(
+      peerConnection,
+      connectionRef,
+      offerCandidates
+    );
+
+    if (local && local.current && localStream)
+      local.current.srcObject = localStream;
+    if (remote && remote.current && remoteStream)
+      remote.current.srcObject = remoteStream;
+
+    setPeerConnection(connection);
+  };
+
+  const answerConnectionOffer = async ({
+    channelId,
+    serverId,
+    peerConnection,
+    connectionId,
+  }: {
+    channelId: string;
+    serverId: string;
+    peerConnection: RTCPeerConnection | undefined;
+    connectionId: string;
+  }) => {
+    if (!peerConnection) return;
+
+    // firestore refs
+    const connectionRef = doc(
+      db,
+      `servers/${serverId}/channels/${channelId}/connections/${connectionId}`
+    );
+    const offerCandidates = collection(
+      db,
+      connectionRef.path,
+      "offerCandidates"
+    );
+    const answerCandidates = collection(
+      db,
+      connectionRef.path,
+      "answerCandidates"
+    );
+    setOfferCandidatesRef(offerCandidates);
+
+    const { connection, localStream, remoteStream } = await answerOffer(
+      peerConnection,
+      connectionRef,
+      answerCandidates
+    );
+
+    if (local && local.current && localStream)
+      local.current.srcObject = localStream;
+    if (remote && remote.current && remoteStream)
+      remote.current.srcObject = remoteStream;
+
+    setPeerConnection(connection);
+  };
+
+  const connectToVoiceChannel = async (channelId: string, serverId: string) => {
+    const channelRef = doc(db, `servers/${serverId}/channels/${channelId}`);
+    // query for users in channel
+    const userQuery = await getDocs(collection(db, `${channelRef.path}/users`));
+    const usersInChannel: UserData[] = [];
+    userQuery.forEach(
+      (el) =>
+        el.data().uid !== currentUser.uid &&
+        usersInChannel.push(el.data() as UserData)
+    );
+
+    console.log(usersInChannel);
+    // if users other than current user
+    if (usersInChannel.length > 0) {
+    }
+
+    // connect user to channel
+    setVoiceChannel({ id: channelId, server: serverId, user: currentUser });
+    await setDoc(doc(channelRef, `users/${currentUser.uid}`), {
+      ...currentUser,
+    });
+    await updateDoc(channelRef, { users: arrayUnion(currentUser) });
+  };
 
   const joinVoice = async (channelId: string, serverId: string) => {
-    // // disconnect from any existing voice channel
+    connectToVoiceChannel(channelId, serverId);
+    // disconnect from any existing voice channel
 
-    // set voice channel state
-    const loggedInUser = user?.providerData.find(
-      (el) => el.providerId === "google.com"
+    // create peer connection object
+    const newPeerConnection = new RTCPeerConnection(STUNServers);
+
+    // query for offer
+    const q = query(
+      collection(db, `servers/${serverId}/channels/${channelId}/connections`),
+      where("offerUser", "==", "115569811279942913451")
     );
-    if (!loggedInUser) return;
-    const userData = {
-      userId: loggedInUser.uid,
-      userName: loggedInUser.displayName || "",
-      avatar: loggedInUser.photoURL || "",
-    };
-    setVoiceChannel({ id: channelId, server: serverId, user: userData });
-
-    // generate peer connections and media tracks
-    await connect(channelId, serverId);
+    const channelSnapshot = await getDocs(q);
+    let offer: any;
+    channelSnapshot.forEach((el) => {
+      if (el.data().offer) offer = el.data().offer;
+    });
+    // if offer, respondToOffer()  add media tracks
+    if (offer) {
+      answerConnectionOffer({
+        channelId,
+        serverId,
+        peerConnection: newPeerConnection,
+        connectionId: "R18xcPNQUkOZJV4JDGBg",
+      });
+    } else {
+      createConnectionOffer({
+        channelId,
+        serverId,
+        peerConnection: newPeerConnection,
+      });
+    }
   };
 
   const leaveVoice = async () => {
-    const mediaTracks: MediaStreamTrack[] = [];
-    audioElementRefs.current.forEach((ref) => {
-      const srcObject = ref.srcObject as MediaStream | null;
-      if (!srcObject) return;
-      const tracks = srcObject.getTracks();
-      tracks.forEach((track) => mediaTracks.push(track));
-    });
-    await disconnect({
-      connections,
-      mediaTracks,
-      voiceChannel,
-      setVoiceChannel,
-    });
+    // close media streams
+    removeMediaFeed();
 
-    audioElementRefs.current.forEach((ref) => (ref.srcObject = null));
-    audioElementRefs.current = [];
-  };
+    // close peer connection
+    if (peerConnection) peerConnection.close();
 
-  // =========================================================================================================
-  // build audio elements
-
-  const audioElements = connections.current.map((connection) => {
-    return (
-      <div key={connection.connectionRef} id={`${connection.connectionRef}`}>
-        <audio
-          id={`${connection.connectionRef}-local`}
-          ref={pushToRef}
-          muted
-          autoPlay
-          playsInline
-        />
-        <audio
-          id={`${connection.connectionRef}-remote`}
-          ref={pushToRef}
-          autoPlay
-          playsInline
-        />
-      </div>
+    // remove user details from voice channel in db
+    const channelRef = doc(
+      db,
+      `servers/${voiceChannel?.server}/channels/${voiceChannel?.id}/users/${loggedInUser?.uid}`
     );
-  });
+    await updateDoc(
+      doc(db, `servers/${voiceChannel?.server}/channels/${voiceChannel?.id}`),
+      { users: arrayRemove(voiceChannel?.user) }
+    );
+    await deleteDoc(channelRef);
+
+    // clean up peer connection entries in database
+    // const remainingUsers = await getDoc(channelRef);
+    // if (remainingUsers.data()?.users.length === 0) {
+    //   await updateDoc(channelRef, { offer: deleteField() });
+    //   await updateDoc(channelRef, { answer: deleteField() });
+    //   const offerCandidatesSnapshot = await getDocs(
+    //     collection(
+    //       db,
+    //       `servers/${voiceChannel?.server}/channels/${voiceChannel?.id}/offerCandidates`
+    //     )
+    //   );
+    //   const answerCandidatesSnapshot = await getDocs(
+    //     collection(
+    //       db,
+    //       `servers/${voiceChannel?.server}/channels/${voiceChannel?.id}/answerCandidates`
+    //     )
+    //   );
+    //   offerCandidatesSnapshot.forEach((doc) => deleteDoc(doc.ref));
+    //   answerCandidatesSnapshot.forEach((doc) => deleteDoc(doc.ref));
+    // }
+
+    // set voice channel state to undefined
+    setVoiceChannel(undefined);
+    setPeerConnection(undefined);
+  };
 
   // =========================================================================================================
   // build servers, messages and channels jsx
@@ -192,6 +551,8 @@ const App = () => {
 
   // =========================================================================================================
 
+  console.log({ peerConnection });
+
   return (
     <div
       className="App"
@@ -199,7 +560,17 @@ const App = () => {
     >
       {user ? (
         <div style={{ display: "flex" }}>
-          {audioElements}
+          {/* {audioElements} */}
+          /*{" "}
+          <div className="videos">
+            <span>
+              <audio muted id="audio" ref={local} autoPlay playsInline></audio>
+            </span>
+            <span>
+              <audio id="remoteAudio" ref={remote} autoPlay playsInline></audio>
+            </span>
+          </div>{" "}
+          */
           <ServerList dimensions={dimensions} icon={logo}>
             {SERVERS}
           </ServerList>

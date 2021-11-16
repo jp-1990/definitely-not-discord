@@ -2,21 +2,14 @@ import {
   addDoc,
   arrayUnion,
   collection,
+  CollectionReference,
   doc,
   DocumentData,
   Firestore,
 } from "@firebase/firestore";
-import { updateDoc } from "firebase/firestore";
+import { DocumentReference, getDoc, updateDoc } from "firebase/firestore";
 
 //====================================================================
-const STUNServers = {
-  iceServers: [
-    {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    },
-  ],
-  iceCandidatePoolSize: 10,
-};
 
 /**
  *
@@ -69,22 +62,17 @@ export const getRemoteTracksFromConnection = (
  * @param connection RTC Peer Connection object
  * @param db Firestore instance
  * @param path The path to the document to update (e.g. servers/{id}/channels/{id}/connections/{id})
- * @param type 'offer' || 'answer'
  *
  * @description adds a listener callback to the peer connection, which updates the specified doc when the onicecandidate event fires
  */
 export const setIceCandidatesToDatabase = async (
   connection: RTCPeerConnection,
-  db: Firestore,
-  path: string,
-  type: "offer" | "answer"
+  collectionRef: CollectionReference
 ) => {
   try {
     connection.onicecandidate = async (event) => {
       if (event.candidate) {
-        await updateDoc(doc(db, path), {
-          [`${type}Candidates`]: arrayUnion(event.candidate.toJSON()),
-        });
+        await addDoc(collectionRef, event.candidate.toJSON());
       }
     };
   } catch (err) {
@@ -96,7 +84,29 @@ export const setIceCandidatesToDatabase = async (
 
 /**
  *
- * @param connection
+ * @param connection RTC Peer Connection object
+ * @param data { candidate, sdpMLineIndex, sdpMid } retrieved from listening server
+ *
+ * @description adds an ice candidate to a provided peer connection
+ */
+export const setIceCandidateToConnection = (
+  connection: RTCPeerConnection,
+  data: DocumentData | undefined
+) => {
+  if (!data) return;
+  try {
+    const candidate = new RTCIceCandidate(data);
+    connection.addIceCandidate(candidate);
+  } catch (err) {
+    console.error(
+      `failed to set ice candidate to connection (setIceCandidateToConnection): ${err}`
+    );
+  }
+};
+
+/**
+ *
+ * @param connection RTC Peer Connection object
  * @returns Object {sdp,type} constructed from offer description to set as offer in the database
  *
  * @description Creates a new offer and sets it as the local description on the provided peer connection, and returns an object to set as an offer on the listening server.
@@ -144,25 +154,19 @@ export const createAnswerAndSetToLocalDescription = async (
 
 /**
  *
- * @param data Document data from listening server. Should contain { answer, answerCandidates, answerUser }
  * @param connection Existing RTC peer connection to set answer details on
+ * @param data Document data from listening server. Should contain { answer }
  *
- * @description Expects answer data, which is then set as the remote description on the provided peer connection. If the data input does not contain the properties; answer, answerCandidates and answerUser, the function will immediately return without modifying the provided peer connection object.
+ * @description Expects answer data, which is then set as the remote description on the provided peer connection. If the data input does not contain the properties; answer, the function will immediately return without modifying the provided peer connection object.
  */
 export const setExistingAnswerToRemoteDescription = async (
-  data: DocumentData,
-  connection: RTCPeerConnection
+  connection: RTCPeerConnection,
+  data: DocumentData | undefined
 ) => {
-  if (!data.answer || !data.answerCandidates) return;
+  if (!data?.answer) return;
   try {
     const answerDescription = new RTCSessionDescription(data.answer);
-    const answerCandidates = data.answerCandidates;
-
     await connection.setRemoteDescription(answerDescription);
-    answerCandidates.forEach((el: RTCIceCandidateInit | undefined) => {
-      const candidate = new RTCIceCandidate(el);
-      connection.addIceCandidate(candidate);
-    });
   } catch (err) {
     console.error(
       `failed to set answer as remote description (setExistingAnswerToRemoteDescription): ${err}`
@@ -172,25 +176,19 @@ export const setExistingAnswerToRemoteDescription = async (
 
 /**
  *
- * @param data Document data from listening server. Should contain { offer, offerCandidates }
  * @param connection Existing RTC peer connection to set offer details on
+ * @param data Document data from listening server. Should contain { offer }
  *
- * @description Expects offer data, which is then set as the remote description on the provided peer connection. If the data input does not contain the properties; offer and offerCandidates, the function will immediately return without modifying the provided peer connection object.
+ * @description Expects offer data, which is then set as the remote description on the provided peer connection. If the data input does not contain the properties; offer, the function will immediately return without modifying the provided peer connection object.
  */
 export const setExistingOfferToRemoteDescription = async (
-  data: DocumentData,
-  connection: RTCPeerConnection
+  connection: RTCPeerConnection,
+  data: DocumentData | undefined
 ) => {
-  if (!data.offer || !data.offerCandidates) return;
+  if (!data?.offer) return;
   try {
     const offerDescription = new RTCSessionDescription(data.offer);
-    const offerCandidates = data.offerCandidates;
-
     await connection.setRemoteDescription(offerDescription);
-    offerCandidates.forEach((el: RTCIceCandidateInit | undefined) => {
-      const candidate = new RTCIceCandidate(el);
-      connection.addIceCandidate(candidate);
-    });
   } catch (err) {
     console.error(
       `failed to set offer as remote description (setExistingOfferToRemoteDescription): ${err}`
@@ -198,33 +196,23 @@ export const setExistingOfferToRemoteDescription = async (
   }
 };
 
-interface OfferPeerConnectionType {
-  db: Firestore;
-  channelPath: string;
-  offerUser: string;
-  answerUser: string;
-}
 /**
  *
- * @param object {@link OfferPeerConnectionType}
- * @returns Object {connection: RTCPeerConnection, connectionRef: firestore doc ref, localStream: MediaStream, remoteStream: MediaStream}
+ * @param connection RTC peer connection
+ * @param connectionRef document reference for the target connection doc on the listening server
+ * @param offerCandidatesRef collection reference for the target offer candidates collection on the listening server
+ * @returns {object} { connection: RTCPeerConnection, localStream: MediaStream, remoteStream: MediaStream }
  *
- * @description Creates local and remote media streams and configures a peer connection with the offer as the local description. It also configures the connection document on the listening server with offer ice candidates, an offer, the offer user's id, and the id of the user expected to answer this offer.
+ * @description Creates a local and remote media stream, adds the local tracks to the connection and sets a callback to set the remote tracks to the remoteStream when they become available. A callback is applied to the connection to set ice candidates for the offer to the listening server when they become available. An offer is then created for the connection, and set the the provided connectionRef on the listening server. The function returns the original peer connection with the modifications applied, plus the local and remote media streams.
  */
-export const offerPeerConnection = async ({
-  db,
-  channelPath,
-  offerUser,
-  answerUser,
-}: OfferPeerConnectionType) => {
-  let localStream: MediaStream;
-  let remoteStream: MediaStream;
-
+export const createOffer = async (
+  connection: RTCPeerConnection,
+  connectionRef: DocumentReference<DocumentData>,
+  offerCandidatesRef: CollectionReference<DocumentData>
+) => {
+  let localStream: MediaStream | undefined = undefined;
+  let remoteStream: MediaStream | undefined = undefined;
   try {
-    // create peer connection for user where localDesc = offer
-    const connection = new RTCPeerConnection(STUNServers);
-
-    // create media streams
     localStream = await navigator.mediaDevices.getUserMedia({
       audio: true,
     });
@@ -233,72 +221,36 @@ export const offerPeerConnection = async ({
     addLocalTracksToConnection(connection, localStream);
     getRemoteTracksFromConnection(connection, remoteStream);
 
-    // create connection doc
-    const connectionRef = await addDoc(
-      collection(db, channelPath, "connections"),
-      {}
-    );
-
-    // create ice offer candidates for user and add to connection doc
-    await setIceCandidatesToDatabase(
-      connection,
-      db,
-      `${channelPath}/connections/${connectionRef.id}`,
-      "offer"
-    );
-
+    setIceCandidatesToDatabase(connection, offerCandidatesRef);
     const offer = await createOfferAndSetToLocalDescription(connection);
-
-    // update connection doc for user where offerUser = userId and answer user = el.id
-    await updateDoc(doc(db, channelPath, `connections/${connectionRef.id}`), {
-      offerUser,
-      answerUser,
-      offer,
-    });
-
-    return {
-      connection,
-      connectionRef,
-      localStream,
-      remoteStream,
-    };
+    await updateDoc(connectionRef, { offer });
   } catch (err) {
-    console.error(
-      `failed to configure new offer peer connection (offerPeerConnection): ${err}`
-    );
-    return {
-      connection: undefined,
-      connectionRef: undefined,
-      localStream: undefined,
-      remoteStream: undefined,
-    };
+    console.error(`failed to create offer (createOffer): ${err}`);
   }
+  return {
+    connection,
+    localStream,
+    remoteStream,
+  };
 };
 
-interface FullPeerConnectionType {
-  db: Firestore;
-  connectionPath: string;
-  data: DocumentData;
-}
 /**
  *
- * @param object {@link FullPeerConnectionType}
- * @returns Object {connection: RTCPeerConnection, localStream: MediaStream, remoteStream: MediaStream}
+ * @param connection RTC peer connection
+ * @param connectionRef document reference for the target connection doc on the listening server
+ * @param offerCandidatesRef collection reference for the target answer candidates collection on the listening server
+ * @returns {object} { connection: RTCPeerConnection, localStream: MediaStream, remoteStream: MediaStream }
  *
- * @description Creates local and remote media streams and configures a peer connection with the existing offer as the remote description, and created answer as the local description. It also configures the connection document on the listening server with answer ice candidates, and an answer.
+ * @description Creates a local and remote media stream, adds the local tracks to the connection and sets a callback to set the remote tracks to the remoteStream when they become available. A callback is applied to the connection to set ice candidates for the answer to the listening server when they become available. The existing offer is then fetched from the listening server and set as the remote description. An answer is then created for the connection, and set the the provided connectionRef on the listening server. The function returns the original peer connection with the modifications applied, plus the local and remote media streams.
  */
-export const fullPeerConnection = async ({
-  db,
-  connectionPath,
-  data,
-}: FullPeerConnectionType) => {
-  let localStream: MediaStream;
-  let remoteStream: MediaStream;
-
+export const answerOffer = async (
+  connection: RTCPeerConnection,
+  connectionRef: DocumentReference<DocumentData>,
+  answerCandidatesRef: CollectionReference<DocumentData>
+) => {
+  let localStream: MediaStream | undefined = undefined;
+  let remoteStream: MediaStream | undefined = undefined;
   try {
-    const connection = new RTCPeerConnection(STUNServers);
-
-    // create media streams
     localStream = await navigator.mediaDevices.getUserMedia({
       audio: true,
     });
@@ -307,29 +259,19 @@ export const fullPeerConnection = async ({
     addLocalTracksToConnection(connection, localStream);
     getRemoteTracksFromConnection(connection, remoteStream);
 
-    // create ice answer candidates for user and add to connection doc
-    await setIceCandidatesToDatabase(connection, db, connectionPath, "answer");
-
-    await setExistingOfferToRemoteDescription(data, connection);
+    setIceCandidatesToDatabase(connection, answerCandidatesRef);
+    const connectionData = (await getDoc(connectionRef)).data();
+    await setExistingOfferToRemoteDescription(connection, connectionData);
     const answer = await createAnswerAndSetToLocalDescription(connection);
-
-    await updateDoc(doc(db, connectionPath), { answer });
-
-    return {
-      connection,
-      localStream,
-      remoteStream,
-    };
+    await updateDoc(connectionRef, { answer });
   } catch (err) {
-    console.error(
-      `failed to configure new full peer connection (fullPeerConnection): ${err}`
-    );
-    return {
-      connection: undefined,
-      localStream: undefined,
-      remoteStream: undefined,
-    };
+    console.error(`failed to create answer to offer (answerOffer): ${err}`);
   }
+  return {
+    connection,
+    localStream,
+    remoteStream,
+  };
 };
 
 //====================================================================

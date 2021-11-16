@@ -14,11 +14,7 @@ import {
 import { UserInfo } from "@firebase/auth";
 import { query, updateDoc } from "firebase/firestore";
 
-import {
-  setExistingAnswerToRemoteDescription,
-  offerPeerConnection,
-  fullPeerConnection,
-} from "../utils";
+import { setExistingAnswerToRemoteDescription } from "../utils";
 
 export interface OnlineUserType {
   id: string;

@@ -5,6 +5,7 @@ import {
   collection,
   collectionGroup,
   Firestore,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -39,7 +40,12 @@ interface MessageType {
   channel: string;
 }
 
-type OnlineUserType = Omit<MessageType, "date" | "message" | "channel">;
+interface OnlineUserType {
+  id: string;
+  uid: string;
+  userName: string;
+  avatar: string;
+}
 
 interface Args {
   db: Firestore;
@@ -82,7 +88,7 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
     const channelsQuery = query(collectionGroup(db, "channels"));
     const unsubChannels = onSnapshot(channelsQuery, (querySnapshot) => {
       const channels: ChannelType[] = [];
-      querySnapshot.forEach((doc) => {
+      querySnapshot.forEach(async (doc) => {
         const data = doc.data();
         channels.push({
           name: data.name,
@@ -135,7 +141,7 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
         const data = doc.data();
         onlineUsers.push({
           id: doc.id,
-          userId: data.userId,
+          uid: data.userId,
           userName: data.userName,
           avatar: data.avatar,
         });

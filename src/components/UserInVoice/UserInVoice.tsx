@@ -3,7 +3,7 @@ import styles from "./UserInVoice.module.css";
 
 export interface OnlineUserType {
   id: string;
-  userId: string;
+  uid: string;
   userName: string;
   avatar?: string;
 }

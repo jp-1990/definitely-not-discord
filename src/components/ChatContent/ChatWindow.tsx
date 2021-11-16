@@ -17,7 +17,7 @@ import styles from "./ChatWindow.module.css";
 
 export interface OnlineUserType {
   id: string;
-  userId: string;
+  uid: string;
   userName: string;
   avatar?: string;
 }
