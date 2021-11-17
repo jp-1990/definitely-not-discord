@@ -42,3 +42,10 @@ In implementing the full mesh I also encountered some issues with storing and mu
 - Vite
 - Firebase
 - WebRTC
+
+---
+
+With 2 is pretty simple; 1 person connects and sets up a connection offer, and creates ICE candidates for the connection, then the second person connects and sets an answer, with answer ICE candidates. This set of data is set and read from the listening server, in my case firebase. You also need STUN servers to deal with finding ports and public ips, but you just have to feed some free google urls into the connection creation to satisfy that
+When you have additional people, each person has to have this connection structure with every other person in the call, which obviously isn't scalable, but for my purposes that isn't really relevant
+The point I've got to is getting all the correct documents to create and delete on the listening server, and I've checked through that a couple of times, but for some reason the connection fails outside of the local network when resolving the ICE candidates. Despite the listening server holding the correct information, the connection can't be made. Initially I thought it was an issue with the STUN server, but I tested that with a WebRTC tool and the STUNs I'm using created the correct candidates, so that seems fine as well.
+Theres another thing called a TURN server which is used as like a routing middle man from what I understand, to get through trickier network connection, and is necessary for some webRTC connections, so I thought I might have to look into that. Then again that doesn't make sense because I can talk to Will fine in my 2 man setup just using STUN servers

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useReducer, useEffect, useRef, Reducer } from "react";
 import firebase from "firebase/app";
 import {
   useAuth,
@@ -50,6 +50,12 @@ import {
   getAudioLevel,
 } from "./utils/webrtc-functions";
 
+/**
+ *
+ *@property {string} - uid
+ *@property {string} - userName
+ *@property {string | undefined} - avatar (url string)
+ */
 interface UserData {
   uid: string;
   userName: string;
@@ -224,6 +230,134 @@ const App = () => {
   // -----------
   // WEBRTC
   // -----------
+
+  interface ConnectionType {
+    offerUser: string;
+    answerUser: string;
+    connection: RTCPeerConnection;
+    connectionDocumentRef: DocumentReference<DocumentData>;
+    offerCandidatesCollectionRef: CollectionReference<DocumentData>;
+    answerCandidatesCollectionRef: CollectionReference<DocumentData>;
+    localMediaStream: MediaStream;
+    remoteMediaStream: MediaStream;
+  }
+  interface ConnectionsStateType {
+    connections: ConnectionType[] | undefined;
+    connectedUsers: UserData[] | undefined;
+    channelDocumentRef: DocumentReference<DocumentData> | undefined;
+  }
+  const actionTypes = {
+    connectInitial: "CONNECT_INITIAL",
+    connectSelf: "CONNECT_SELF",
+    disconnectSelf: "DISCONNECT_SELF",
+    connectOther: "CONNECT_OTHER",
+    disconnectOther: "DISCONNECT_OTHER",
+  } as const;
+  type Actions<T> = T[keyof T];
+  interface PayloadType {
+    channelDocumentRef?: DocumentReference<DocumentData>;
+    connections?: ConnectionType[];
+    users?: UserData[];
+  }
+  interface ConnectionsActionType {
+    type: Actions<typeof actionTypes>;
+    payload: PayloadType;
+  }
+
+  const connectionsReducer: Reducer<
+    ConnectionsStateType,
+    ConnectionsActionType
+  > = (state, action) => {
+    switch (action.type) {
+      case actionTypes.connectInitial: {
+        // set channel document ref, self to state
+        return {
+          connections: action.payload.connections,
+          connectedUsers: action.payload.users,
+          channelDocumentRef: action.payload.channelDocumentRef,
+        };
+      }
+      case actionTypes.connectSelf: {
+        // set channel document ref, users, connections to state
+        return {
+          connections: action.payload.connections,
+          connectedUsers: action.payload.users,
+          channelDocumentRef: action.payload.channelDocumentRef,
+        };
+      }
+      case actionTypes.disconnectSelf: {
+        // close all media streams and connections
+        state.connections?.forEach((connection) => {
+          connection.localMediaStream
+            .getTracks()
+            .forEach((track) => track.stop());
+          connection.remoteMediaStream
+            .getTracks()
+            .forEach((track) => track.stop());
+          connection.connection.close();
+        });
+        // clear all state
+        return {
+          connections: undefined,
+          connectedUsers: undefined,
+          channelDocumentRef: undefined,
+        };
+      }
+      case actionTypes.connectOther: {
+        if (!action.payload.connections || !action.payload.users) return state;
+        if (!state.connections || !state.connectedUsers) return state;
+        // add new connections for new users and new users to users
+        return {
+          ...state,
+          connections: [...state.connections, ...action.payload.connections],
+          connectedUsers: [...state.connectedUsers, ...action.payload.users],
+        };
+      }
+      case actionTypes.disconnectOther: {
+        if (!action.payload.users) return state;
+        if (!state.connections || !state.connectedUsers) return state;
+        const connectionsToRemove: string[] = [];
+        const usersToRemove: string[] = [];
+        action.payload.users?.forEach((user) => {
+          const connection = state.connections?.find(
+            (el) => (el.answerUser || el.offerUser) === user.uid
+          );
+          // close connection and media streams for user
+          if (connection) {
+            connection.localMediaStream
+              .getTracks()
+              .forEach((track) => track.stop());
+            connection.remoteMediaStream
+              .getTracks()
+              .forEach((track) => track.stop());
+            connection.connection.close();
+            connectionsToRemove.push(connection.connectionDocumentRef.id);
+            usersToRemove.push(user.uid);
+          }
+        });
+        // remove user connection and user from users
+        return {
+          ...state,
+          connections: state.connections.filter(
+            (el) => !connectionsToRemove.includes(el.connectionDocumentRef.id)
+          ),
+          connectedUsers: state.connectedUsers.filter(
+            (el) => !usersToRemove.includes(el.uid)
+          ),
+        };
+      }
+      default: {
+        throw new Error(`Unhandled action type: ${action.type}`);
+      }
+    }
+  };
+
+  const [state, dispatch] = useReducer(connectionsReducer, {
+    connections: undefined,
+    connectedUsers: undefined,
+    channelDocumentRef: undefined,
+  });
+
   const [channelDatabaseRef, setChannelDatabaseRef] =
     useState<DocumentReference<DocumentData>>();
   const [answerCandidatesRef, setAnswerCandidatesRef] =
@@ -351,35 +485,37 @@ const App = () => {
     channelId,
     serverId,
     peerConnection,
+    answerUserId,
   }: {
     channelId: string;
     serverId: string;
     peerConnection: RTCPeerConnection | undefined;
+    answerUserId: string;
   }) => {
     if (!peerConnection) return;
 
     // firestore refs
     const connectionRef = await addDoc(
       collection(db, `servers/${serverId}/channels/${channelId}/connections`),
-      { offerUser: loggedInUser?.uid }
+      { offerUser: loggedInUser?.uid, answerUser: answerUserId }
     );
-    const offerCandidates = collection(
+    const offerCandidatesRef = collection(
       db,
       connectionRef.path,
       "offerCandidates"
     );
-    const answerCandidates = collection(
+    const answerCandidatesRef = collection(
       db,
       connectionRef.path,
       "answerCandidates"
     );
     setChannelDatabaseRef(connectionRef);
-    setAnswerCandidatesRef(answerCandidates);
+    setAnswerCandidatesRef(answerCandidatesRef);
 
     const { connection, localStream, remoteStream } = await createOffer(
       peerConnection,
       connectionRef,
-      offerCandidates
+      offerCandidatesRef
     );
 
     if (local && local.current && localStream)
@@ -448,6 +584,8 @@ const App = () => {
     console.log(usersInChannel);
     // if users other than current user
     if (usersInChannel.length > 0) {
+      // send offers to users already in the channel
+    } else {
     }
 
     // connect user to channel
@@ -488,6 +626,7 @@ const App = () => {
         channelId,
         serverId,
         peerConnection: newPeerConnection,
+        answerUserId: "",
       });
     }
   };
@@ -561,7 +700,7 @@ const App = () => {
       {user ? (
         <div style={{ display: "flex" }}>
           {/* {audioElements} */}
-          /*{" "}
+
           <div className="videos">
             <span>
               <audio muted id="audio" ref={local} autoPlay playsInline></audio>
@@ -569,8 +708,8 @@ const App = () => {
             <span>
               <audio id="remoteAudio" ref={remote} autoPlay playsInline></audio>
             </span>
-          </div>{" "}
-          */
+          </div>
+
           <ServerList dimensions={dimensions} icon={logo}>
             {SERVERS}
           </ServerList>
