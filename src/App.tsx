@@ -80,14 +80,6 @@ const App = () => {
   });
 
   const scrollSpacerRef = useRef<HTMLDivElement>(null);
-  // const audioElementRefs = useRef<HTMLAudioElement[]>([]);
-  // audioElementRefs.current = [];
-
-  // const pushToRef = (el: HTMLAudioElement) => {
-  //   if (el && !audioElementRefs.current.includes(el)) {
-  //     audioElementRefs.current.push(el);
-  //   }
-  // };
 
   // =========================================================================================================
   // hooks
@@ -274,9 +266,6 @@ const App = () => {
     channelDocumentRef: undefined,
   });
 
-  const local = useRef<HTMLAudioElement>(null);
-  const remote = useRef<HTMLAudioElement>(null);
-
   const STUNServers = {
     iceServers: [
       {
@@ -320,11 +309,6 @@ const App = () => {
       connectionDocumentRef,
       answerCandidatesCollectionRef
     );
-
-    if (local && local.current && localStream)
-      local.current.srcObject = localStream;
-    if (remote && remote.current && remoteStream)
-      remote.current.srcObject = remoteStream;
 
     return {
       connection,
@@ -561,11 +545,6 @@ const App = () => {
       offerCandidatesCollectionRef
     );
 
-    if (local && local.current && localStream)
-      local.current.srcObject = localStream;
-    if (remote && remote.current && remoteStream)
-      remote.current.srcObject = remoteStream;
-
     return {
       connection,
       connectionDocumentRef,
@@ -600,7 +579,6 @@ const App = () => {
           usersInChannel.push(el.data() as UserData)
       );
 
-      console.log(usersInChannel);
       // if users other than current user
       if (usersInChannel.length > 0) {
         // send offers to each user already in the channel
@@ -778,6 +756,48 @@ const App = () => {
 
   console.log({ state });
 
+  // MUTE / ENABLE STREAM
+  //   <button
+  //   onClick={() => {
+  //     if (connection.remoteMediaStream && connection.localMediaStream)
+  //       (connection.remoteMediaStream.getAudioTracks()[0].enabled =
+  //         !connection.remoteMediaStream.getAudioTracks()[0].enabled),
+  //         (connection.localMediaStream.getAudioTracks()[0].enabled =
+  //           !connection.localMediaStream.getAudioTracks()[0].enabled);
+  //   }}
+  // >
+  //   testing
+  // </button>
+
+  const audioElements = state.connections?.map((connection) => {
+    return (
+      <div
+        key={connection.connectionDocumentRef.id}
+        id={connection.connectionDocumentRef.id}
+      >
+        <audio
+          muted
+          id="localAudio"
+          ref={(element) => {
+            if (element)
+              element.srcObject = connection.localMediaStream as MediaProvider;
+          }}
+          autoPlay
+          playsInline
+        ></audio>
+        <audio
+          id="remoteAudio"
+          ref={(element) => {
+            if (element)
+              element.srcObject = connection.remoteMediaStream as MediaProvider;
+          }}
+          autoPlay
+          playsInline
+        ></audio>
+      </div>
+    );
+  });
+
   return (
     <div
       className="App"
@@ -785,16 +805,7 @@ const App = () => {
     >
       {user ? (
         <div style={{ display: "flex" }}>
-          {/* {audioElements} */}
-
-          <div className="videos">
-            <span>
-              <audio muted id="audio" ref={local} autoPlay playsInline></audio>
-            </span>
-            <span>
-              <audio id="remoteAudio" ref={remote} autoPlay playsInline></audio>
-            </span>
-          </div>
+          {audioElements}
 
           <ServerList dimensions={dimensions} icon={logo}>
             {SERVERS}
