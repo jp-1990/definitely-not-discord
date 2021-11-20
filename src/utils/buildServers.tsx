@@ -1,14 +1,9 @@
 import React from "react";
 import { ServerIcon } from "../components/ServerList";
+import { ServerState } from "../types";
 
-interface ServerType {
-  id: string;
-  name: string;
+interface ServerType extends ServerState {
   icon: string;
-}
-interface ServerState {
-  id: string;
-  name: string;
 }
 
 interface Args {

@@ -1,29 +1,31 @@
 import React from "react";
 import styles from "./UserInVoice.module.css";
 
-export interface OnlineUserType {
-  id: string;
-  uid: string;
-  userName: string;
-  avatar?: string;
-}
+import { UserData } from "../../types";
+
 interface Props {
-  user: OnlineUserType;
+  user: UserData;
+  speaking: boolean;
 }
 
-const UserInVoice: React.FC<Props> = ({ user }) => {
+const UserInVoice: React.FC<Props> = ({ user, speaking }) => {
   return (
     <div className={styles.userList}>
       <li>
-        <div className={styles.userListIcon}>
+        <div
+          className={`${styles.userListIcon} ${
+            speaking ? styles.speakingIcon : ""
+          }`}
+        >
           {user.avatar && (
             <div>
               <img src={user.avatar} />
-              <div className={styles.onlineMarker} />
             </div>
           )}
         </div>
-        <span>{user.userName}</span>
+        <span className={`${speaking ? styles.speakingText : ""}`}>
+          {user.userName}
+        </span>
       </li>
     </div>
   );

@@ -1,6 +1,7 @@
 .userList {
   padding-left: 36px;
   padding-bottom: 8px;
+  box-sizing: border-box;
 }
 
 .userList li {
@@ -18,6 +19,7 @@
   border-radius: 100%;
   background-color: #fff;
   position: relative;
+  border: 2px solid #2f3136;
 }
 
 .userListIcon img {
@@ -26,8 +28,16 @@
   border-radius: 100%;
 }
 
+.speakingIcon {
+  border: 2px solid #3ba55d;
+}
+
 .userList li span {
   font-weight: 500;
   font-size: 14px;
   color: #8e9297;
+}
+
+.userList li .speakingText {
+  color: #fff;
 }

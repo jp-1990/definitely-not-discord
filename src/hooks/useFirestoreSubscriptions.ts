@@ -5,47 +5,12 @@ import {
   collection,
   collectionGroup,
   Firestore,
-  getDocs,
   onSnapshot,
   orderBy,
   query,
 } from "firebase/firestore";
 
-enum ChannelTypeEnum {
-  VOICE = "VOICE",
-  TEXT = "TEXT",
-}
-
-interface ServerType {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-interface ChannelType {
-  id: string;
-  name: string;
-  type: ChannelTypeEnum;
-  server: string;
-  users?: OnlineUserType[];
-}
-
-interface MessageType {
-  id: string;
-  userId: string;
-  userName: string;
-  avatar?: string;
-  date: string;
-  message: string;
-  channel: string;
-}
-
-interface OnlineUserType {
-  id: string;
-  uid: string;
-  userName: string;
-  avatar: string;
-}
+import { ChannelType, ServerType, UserData, MessageType } from "../types";
 
 interface Args {
   db: Firestore;
@@ -54,9 +19,9 @@ interface Args {
 
 const useFirestoreSubscriptions = ({ db, storage }: Args) => {
   const [serverList, setServerList] = useState<ServerType[]>([]);
-  const [channelList, setChannelList] = useState<ChannelType[]>([]);
+  const [channelList, setChannelList] = useState<ChannelType<UserData>[]>([]);
   const [messageList, setMessageList] = useState<MessageType[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState<OnlineUserType[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<UserData[]>([]);
 
   // SERVER LIST SUBSCRIPTION
   useEffect(() => {
@@ -87,7 +52,7 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
   useEffect(() => {
     const channelsQuery = query(collectionGroup(db, "channels"));
     const unsubChannels = onSnapshot(channelsQuery, (querySnapshot) => {
-      const channels: ChannelType[] = [];
+      const channels: ChannelType<UserData>[] = [];
       querySnapshot.forEach(async (doc) => {
         const data = doc.data();
         channels.push({
@@ -136,11 +101,10 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
   useEffect(() => {
     const onlineUserQuery = query(collection(db, "onlineUsers"));
     const unsubOnlineUsers = onSnapshot(onlineUserQuery, (querySnapshot) => {
-      const onlineUsers: OnlineUserType[] = [];
+      const onlineUsers: UserData[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         onlineUsers.push({
-          id: doc.id,
           uid: data.userId,
           userName: data.userName,
           avatar: data.avatar,

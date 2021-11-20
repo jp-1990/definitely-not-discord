@@ -1,15 +1,5 @@
-import {
-  addDoc,
-  arrayUnion,
-  collection,
-  CollectionReference,
-  doc,
-  DocumentData,
-  Firestore,
-} from "@firebase/firestore";
+import { addDoc, CollectionReference, DocumentData } from "@firebase/firestore";
 import { DocumentReference, getDoc, updateDoc } from "firebase/firestore";
-
-//====================================================================
 
 /**
  *
@@ -272,28 +262,4 @@ export const answerOffer = async (
     localStream,
     remoteStream,
   };
-};
-
-//====================================================================
-
-/**
- *
- * @param connection RTC peer connection to get audio level from
- * @returns Number | 'no audio' string | undefined
- *
- * @description Uses getSynchronizationSources on the provided peer connection to determine the current audio level. It is intended that this function be called repeatedly to determine if a user is speaking.
- */
-export const getAudioLevel = (connection: RTCPeerConnection) => {
-  try {
-    const receiver = connection
-      .getReceivers()
-      .find((e) => e.track.kind === "audio");
-    if (receiver && receiver.getSynchronizationSources) {
-      const source = receiver.getSynchronizationSources()[0];
-      if (source) return source.audioLevel;
-      return "no audio level received";
-    }
-  } catch (err) {
-    console.error(`failed to get audio level (getAudioLevel): ${err}`);
-  }
 };

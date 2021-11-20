@@ -1,27 +1,11 @@
 import { User } from "@firebase/auth";
 import { addDoc, collection, Firestore } from "@firebase/firestore";
 
-interface MessageType {
-  id: string;
-  userId: string;
-  userName: string;
-  avatar?: string;
-  date: string;
-  message: string;
-  channel: string;
-}
-
-interface ServerState {
-  id: string;
-  name: string;
-}
-interface ChannelState extends ServerState {
-  server: string;
-}
+import { MessageType, ServerState, TextChannelState } from "../types";
 
 interface Args {
   server: ServerState | undefined;
-  textChannel: ChannelState | undefined;
+  textChannel: TextChannelState | undefined;
   user: User | null;
   db: Firestore;
 }

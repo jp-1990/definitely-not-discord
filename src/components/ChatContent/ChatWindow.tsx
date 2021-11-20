@@ -11,24 +11,18 @@ import { AiOutlineGif, AiFillFile } from "react-icons/ai";
 import { RiPushpinFill } from "react-icons/ri";
 import { MdPeopleAlt, MdInbox, MdOutlineHelp } from "react-icons/md";
 
+import { UserData } from "../../types";
+
 import unknownUser from "../../assets/img/unknown-user.jpg";
-
 import styles from "./ChatWindow.module.css";
-
-export interface OnlineUserType {
-  id: string;
-  uid: string;
-  userName: string;
-  avatar?: string;
-}
 
 interface Props {
   sendMessage: (message: string) => void;
   channel: { id: string; name: string; server: string } | undefined;
-  onlineUsers: OnlineUserType[];
+  onlineUsers: UserData[];
 }
 
-const OnlineUser = ({ user }: { user: OnlineUserType }) => {
+const OnlineUser = ({ user }: { user: UserData }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(user.avatar);
   const setImageUndefined = () => setImgSrc(undefined);
   return (
@@ -64,7 +58,7 @@ const ChatWindow: React.FC<Props> = ({
   const renderOnlineUsers =
     onlineUsers &&
     onlineUsers.map((el) => {
-      return <OnlineUser key={el.id} user={el} />;
+      return <OnlineUser key={el.uid} user={el} />;
     });
 
   return (

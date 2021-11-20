@@ -50,6 +50,7 @@
   font-weight: 700;
   font-size: 18px;
   margin: 0 12px;
+  cursor: pointer;
 }
 
 .icon {
@@ -60,6 +61,20 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  background-color: transparent;
+  border: none;
+  position: relative;
+}
+.icon:hover {
+  background-color: #6a6a6a3a;
+}
+.muted {
+  position: absolute;
+  width: 2px;
+  height: 20px;
+  background-color: #ed423f;
+  border-radius: 2px;
+  transform: rotate(40deg);
 }
 
 .userDetailsContainer {

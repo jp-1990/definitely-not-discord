@@ -1,4 +1,8 @@
-export { default as buildChannelsJSX } from "./buildChannels";
+export {
+  getIncomingAudioLevel,
+  muteMediaStream,
+  unmuteMediaStream,
+} from "./audio-functions";
 export { default as buildMessagesJSX } from "./buildMessages";
 export { default as buildServersJSX } from "./buildServers";
 export {
@@ -12,5 +16,4 @@ export {
   setExistingAnswerToRemoteDescription,
   createOffer,
   answerOffer,
-  getAudioLevel,
 } from "./webrtc-functions";

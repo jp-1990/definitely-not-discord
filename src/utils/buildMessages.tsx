@@ -1,13 +1,8 @@
 import React from "react";
 import { Message } from "../components/ChatContent";
 
-interface ServerState {
-  id: string;
-  name: string;
-}
-interface ChannelState extends ServerState {
-  server: string;
-}
+import { ServerState, TextChannelState } from "../types";
+
 interface MessageType {
   id: string;
   userId: string;
@@ -19,7 +14,7 @@ interface MessageType {
 }
 
 interface Args {
-  textChannel: ChannelState | undefined;
+  textChannel: TextChannelState | undefined;
   messages: MessageType[];
 }
 const sameDay = (first: Date, second: Date) =>

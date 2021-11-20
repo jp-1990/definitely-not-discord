@@ -5,16 +5,10 @@ import { FaVideo } from "react-icons/fa";
 import { MdScreenShare } from "react-icons/md";
 import { AiFillSignal } from "react-icons/ai";
 
+import { ServerState, VoiceChannelState, UserData } from "../../types";
+
 import unknownUser from "../../assets/img/unknown-user.jpg";
 import styles from "./ChannelList.module.css";
-
-interface ServerState {
-  id: string;
-  name: string;
-}
-interface ChannelState extends ServerState {
-  server: string;
-}
 
 interface WidthHeight {
   width: number;
@@ -23,25 +17,32 @@ interface WidthHeight {
 
 interface Props {
   server: ServerState | undefined;
-  voiceChannel: Omit<ChannelState, "name"> | undefined;
+  voiceChannel: VoiceChannelState<UserData> | undefined;
   user: any;
-  leaveVoice: () => void;
-  signOut: () => void;
   dimensions: WidthHeight;
+  actions: {
+    signOut: () => void;
+    leaveVoice: () => void;
+    muteSelf: () => void;
+    unmuteSelf: () => void;
+    muteOthers: () => void;
+    unmuteOthers: () => void;
+  };
 }
 
 const ChannelList: React.FC<Props> = ({
   server,
   voiceChannel,
   user,
-  leaveVoice,
-  signOut,
   dimensions,
+  actions,
   children,
 }) => {
   const userData = user.providerData.find(
     (el: Record<string, any>) => el.providerId === "google.com"
   );
+  const [muted, setMuted] = useState<boolean>(false);
+  const [deafened, setDeafened] = useState<boolean>(false);
 
   const [imgSrc, setImgSrc] = useState<string | undefined>(userData.photoURL);
   const [signOutOpen, setSignOutOpen] = useState<boolean>(false);
@@ -49,6 +50,35 @@ const ChannelList: React.FC<Props> = ({
   const setImageUndefined = () => setImgSrc(undefined);
   const toggleOpenSignOut = () => {
     setSignOutOpen((prev) => !prev);
+  };
+
+  const handleToggleMute = () => {
+    if (deafened) {
+      actions.unmuteSelf();
+      actions.unmuteOthers();
+      setMuted(false);
+      setDeafened(false);
+    } else if (muted) {
+      actions.unmuteSelf();
+      setMuted(false);
+    } else {
+      actions.muteSelf();
+      setMuted(true);
+    }
+  };
+
+  const handleToggleDeafen = () => {
+    if (deafened) {
+      actions.unmuteSelf();
+      actions.unmuteOthers();
+      setMuted(false);
+      setDeafened(false);
+    } else {
+      actions.muteSelf();
+      actions.muteOthers();
+      setMuted(true);
+      setDeafened(true);
+    }
   };
 
   return (
@@ -74,7 +104,10 @@ const ChannelList: React.FC<Props> = ({
               </div>
               <span>General/Air</span>
             </div>
-            <button className={styles.disconnectButton} onClick={leaveVoice}>
+            <button
+              className={styles.disconnectButton}
+              onClick={actions.leaveVoice}
+            >
               <BsFillTelephoneXFill size="32px" />
             </button>
           </div>
@@ -93,7 +126,7 @@ const ChannelList: React.FC<Props> = ({
       <footer>
         {signOutOpen && (
           <div className={styles.logoutContainer}>
-            <button type="button" onClick={signOut}>
+            <button type="button" onClick={actions.signOut}>
               Log Out
             </button>
           </div>
@@ -114,12 +147,14 @@ const ChannelList: React.FC<Props> = ({
           </div>
         </div>
         <div className={styles.iconContainer}>
-          <div className={styles.icon}>
+          <button onClick={handleToggleMute} className={styles.icon}>
             <IoMdMic fill="#b9bbbe" size="20px" />
-          </div>
-          <div className={styles.icon}>
+            {muted && <div className={styles.muted} />}
+          </button>
+          <button onClick={handleToggleDeafen} className={styles.icon}>
             <BsHeadphones fill="#b9bbbe" size="22px" />
-          </div>
+            {deafened && <div className={styles.muted} />}
+          </button>
           <div
             className={styles.icon}
             role="button"
