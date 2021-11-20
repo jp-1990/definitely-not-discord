@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Channel from "../components/ChannelList/Channel";
-import { UserInVoice, OnlineUserType } from "../components/UserInVoice";
+import { UserInVoice } from "../components/UserInVoice";
 import { getIncomingAudioLevel } from "../utils";
 import {
   ServerState,
@@ -19,7 +19,7 @@ interface Args {
   >;
   joinVoice: (channelId: string, serverId: string) => void;
   connections: ConnectionType[] | undefined;
-  currentUser: Omit<OnlineUserType, "id">;
+  currentUser: UserData;
 }
 
 const useBuildChannelsJSX = ({

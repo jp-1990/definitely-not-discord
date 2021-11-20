@@ -169,8 +169,6 @@ const App = () => {
     );
   });
 
-  console.log("RENDERED APP.TSX");
-
   return (
     <div
       className="App"

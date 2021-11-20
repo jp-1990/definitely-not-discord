@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./UserInVoice.module.css";
 
 import { UserData } from "../../types";
+import unknownUser from "../../assets/img/unknown-user.jpg";
 
 interface Props {
   user: UserData;
@@ -9,6 +10,8 @@ interface Props {
 }
 
 const UserInVoice: React.FC<Props> = ({ user, speaking }) => {
+  const [imgSrc, setImgSrc] = useState<string | undefined>(user.avatar);
+  const setImageUndefined = () => setImgSrc(undefined);
   return (
     <div className={styles.userList}>
       <li>
@@ -19,7 +22,7 @@ const UserInVoice: React.FC<Props> = ({ user, speaking }) => {
         >
           {user.avatar && (
             <div>
-              <img src={user.avatar} />
+              <img src={imgSrc || unknownUser} onError={setImageUndefined} />
             </div>
           )}
         </div>
