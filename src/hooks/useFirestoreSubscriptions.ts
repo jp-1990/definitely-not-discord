@@ -31,8 +31,12 @@ const useFirestoreSubscriptions = ({ db, storage }: Args) => {
       (async () => {
         for (let i = 0, j = querySnapshot.docs.length; i < j; i++) {
           const data = querySnapshot.docs[i].data();
+
           const url = await getDownloadURL(
-            ref(storage, `images/${data.name.toLowerCase()}.jpg`)
+            ref(
+              storage,
+              `images/${data.name.toLowerCase().split(" ").join("-")}.jpg`
+            )
           );
           servers.push({
             id: querySnapshot.docs[i].id,

@@ -81,13 +81,17 @@ const App = () => {
   // ensure a server is always set
   useEffect(() => {
     if (!server) setServer(servers[0]);
-    setTextChannel(channels.find((el) => el.server === server?.id));
+    setTextChannel(
+      channels.find((el) => el.server === server?.id && el.type === "TEXT")
+    );
   }, [server, servers]);
 
   // ensure a channel is always set
   useEffect(() => {
     if (server && !textChannel)
-      setTextChannel(channels.find((el) => el.server === server?.id));
+      setTextChannel(
+        channels.find((el) => el.server === server?.id && el.type === "TEXT")
+      );
   }, [server, textChannel]);
 
   // scroll chat on new message

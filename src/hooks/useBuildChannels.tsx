@@ -61,7 +61,7 @@ const useBuildChannelsJSX = ({
       const audioLevel = getOutgoingAudioLevel(analyser, audioData);
       const { uid } = currentUser;
 
-      if (audioLevel && audioLevel > 35) {
+      if (audioLevel && audioLevel > 16) {
         handleUserStartSpeaking(uid);
       } else if (usersSpeaking.includes(uid)) {
         handleUserStopSpeaking(uid);
@@ -81,7 +81,8 @@ const useBuildChannelsJSX = ({
       connections.forEach(({ connection, answerUser, offerUser }) => {
         const audioLevel = getIncomingAudioLevel(connection);
         const uid = answerUser === currentUser.uid ? offerUser : answerUser;
-        if (audioLevel && audioLevel > 0.00075) {
+
+        if (audioLevel && audioLevel > 0.00025) {
           handleUserStartSpeaking(uid);
         } else if (usersSpeaking.includes(uid)) {
           handleUserStopSpeaking(uid);
