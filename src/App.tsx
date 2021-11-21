@@ -30,8 +30,22 @@ import {
   TextChannelState,
   ServerState,
 } from "./types";
+import { Firestore } from "@firebase/firestore";
+import { FirebaseStorage } from "@firebase/storage";
+import { User } from "@firebase/auth";
 
-const App = () => {
+interface Props {
+  db: Firestore;
+  storage: FirebaseStorage;
+  signOut: () => Promise<void>;
+  user: User;
+  dimensions: {
+    width: number;
+    height: number;
+  };
+}
+
+const App: React.FC<Props> = ({ db, storage, user, signOut, dimensions }) => {
   const [server, setServer] = useState<ServerState>();
   const [textChannel, setTextChannel] = useState<TextChannelState>();
   const [voiceChannel, setVoiceChannel] =
@@ -47,9 +61,7 @@ const App = () => {
   // =========================================================================================================
   // hooks
 
-  // firebase instances, subscriptions and auth
-  const { db, auth, storage } = useFirebase();
-  const { signInWithGoogle, signOut, user } = useAuth({ db, auth });
+  // firebase subscriptions
   const { servers, channels, messages, onlineUsers } =
     useFirestoreSubscriptions({ db, storage });
 
@@ -72,7 +84,6 @@ const App = () => {
   const { sendMessage } = useSendMessage({ server, textChannel, user, db });
 
   // util hooks
-  const { dimensions } = useWindowSize();
   const { logo } = useGetLogo({ storage });
 
   // =========================================================================================================
@@ -97,7 +108,7 @@ const App = () => {
   // scroll chat on new message
   useEffect(() => {
     scrollSpacerRef && scrollSpacerRef.current?.scrollIntoView();
-  }, [messages]);
+  }, [messages, textChannel]);
 
   // =========================================================================================================
   // webRTC / audio functions
@@ -178,49 +189,45 @@ const App = () => {
       className="App"
       style={{ height: dimensions.height, width: dimensions.width }}
     >
-      {user ? (
-        <div style={{ display: "flex" }}>
-          {audioElements}
+      <div style={{ display: "flex" }}>
+        {audioElements}
 
-          <ServerList dimensions={dimensions} icon={logo}>
-            {SERVERS}
-          </ServerList>
-          <ChannelList
-            dimensions={dimensions}
-            user={user}
+        <ServerList dimensions={dimensions} icon={logo}>
+          {SERVERS}
+        </ServerList>
+        <ChannelList
+          dimensions={dimensions}
+          user={user}
+          server={server}
+          voiceChannel={voiceChannel}
+          actions={{
+            muteSelf,
+            unmuteSelf,
+            muteOthers,
+            unmuteOthers,
+            signOut,
+            leaveVoice,
+          }}
+        >
+          <Channels
+            channels={channels}
             server={server}
-            voiceChannel={voiceChannel}
-            actions={{
-              muteSelf,
-              unmuteSelf,
-              muteOthers,
-              unmuteOthers,
-              signOut,
-              leaveVoice,
-            }}
-          >
-            <Channels
-              channels={channels}
-              server={server}
-              textChannel={textChannel}
-              setTextChannel={setTextChannel}
-              joinVoice={joinVoice}
-              currentUser={currentUser}
-              connections={state.connections}
-            />
-          </ChannelList>
-          <ChatWindow
-            sendMessage={sendMessage}
-            channel={textChannel}
-            onlineUsers={onlineUsers}
-          >
-            {MESSAGES}
-            <div className="scrollSpacer" ref={scrollSpacerRef} />
-          </ChatWindow>
-        </div>
-      ) : (
-        <SignIn signInWithGoogle={signInWithGoogle} />
-      )}
+            textChannel={textChannel}
+            setTextChannel={setTextChannel}
+            joinVoice={joinVoice}
+            currentUser={currentUser}
+            connections={state.connections}
+          />
+        </ChannelList>
+        <ChatWindow
+          sendMessage={sendMessage}
+          channel={textChannel}
+          onlineUsers={onlineUsers}
+        >
+          {MESSAGES}
+          <div className="scrollSpacer" ref={scrollSpacerRef} />
+        </ChatWindow>
+      </div>
     </div>
   );
 };

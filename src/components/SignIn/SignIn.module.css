@@ -59,6 +59,7 @@
   height: 40px;
   padding: 2px 16px;
   margin-top: 24px;
+  cursor: pointer;
 }
 
 .container section button h3 {
