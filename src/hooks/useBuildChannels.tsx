@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Channel from "../components/ChannelList/Channel";
 import { UserInVoice } from "../components/UserInVoice";
-import { getIncomingAudioLevel } from "../utils";
+import { getIncomingAudioLevel, getOutgoingAudioLevel } from "../utils";
 import {
   ServerState,
   TextChannelState,
@@ -41,20 +41,50 @@ const useBuildChannelsJSX = ({
   };
 
   useEffect(() => {
-    let intervalId: NodeJS.Timer;
+    if (!connections || !connections[0]?.localMediaStream) return;
 
-    intervalId = setInterval(() => {
+    // @ts-expect-error webkitAudioContex doesnt exist on window type, but does exist on older browsers
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    analyser.fftSize = 32;
+    const audioData = new Uint8Array(analyser.frequencyBinCount);
+    const source = audioContext.createMediaStreamSource(
+      connections[0].localMediaStream
+    );
+    source.connect(analyser);
+
+    const intervalId = setInterval(() => {
+      if (!connections || !connections[0].localMediaStream) return;
+      if (connections.length + 1 < usersSpeaking.length) setUsersSpeaking([]);
+
+      const audioLevel = getOutgoingAudioLevel(analyser, audioData);
+      const { uid } = currentUser;
+
+      if (audioLevel && audioLevel > 35) {
+        handleUserStartSpeaking(uid);
+      } else if (usersSpeaking.includes(uid)) {
+        handleUserStopSpeaking(uid);
+      }
+    }, 200);
+
+    return () => {
+      audioContext.close();
+      clearInterval(intervalId);
+    };
+  }, [connections, usersSpeaking]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
       if (!connections) return;
-      if (connections.length < usersSpeaking.length) setUsersSpeaking([]);
+      if (connections.length + 1 < usersSpeaking.length) setUsersSpeaking([]);
       connections.forEach(({ connection, answerUser, offerUser }) => {
         const audioLevel = getIncomingAudioLevel(connection);
         const uid = answerUser === currentUser.uid ? offerUser : answerUser;
-        if (typeof audioLevel === "number" && audioLevel > 0.0007) {
+        if (audioLevel && audioLevel > 0.00075) {
           handleUserStartSpeaking(uid);
-          console.log("afterStart", usersSpeaking);
         } else if (usersSpeaking.includes(uid)) {
           handleUserStopSpeaking(uid);
-          console.log("afterStop", usersSpeaking);
         }
       });
     }, 200);

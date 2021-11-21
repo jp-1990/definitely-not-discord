@@ -1,5 +1,6 @@
 export {
   getIncomingAudioLevel,
+  getOutgoingAudioLevel,
   muteMediaStream,
   unmuteMediaStream,
 } from "./audio-functions";
