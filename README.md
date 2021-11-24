@@ -93,6 +93,14 @@ This begins with a collection of servers, where each server document has a colle
 
 ### Client-side
 
-The previous sections have described the logic behind making a WebRTC connection, the specific topology chosen for this application, along with the data model required to support it. This section will address the way this is implemented on the client-side in !discord.
+The previous sections have described the logic behind making a WebRTC connection, the specific topology chosen for this application, along with the data model required to support it. This section will briefly address the way this is implemented on the client-side in !discord.
 
-[ AWAITING COMPLETION ]
+The component tree of the project has limited layers, so the WebRTC functionality is implemented as a custom hook, rather than with context, because prop drilling is not an issue. State is handled in a reducer, and tracks an array of connections, and the firestore document ref for the target channel. The state could have been implemented simply with useState, but it initially also tracked users in the channel, until it became apparant that this was not necessary. At this point, the reducer was fully functional, and it would not have been a productive use of time to refactor it for a slight gain in readability.
+
+A set of utility functions complement the custom hook, and their descriptive names make reading and understanding the hook significantly easier. Many of these act as a pipeline, where they accept an RTCPeerConnection object, perform an operation, and return it.
+
+The listening functionality is hanndled by a series of useEffect hooks, which set up firestore listeners, making sure to unsubscribe to them in the return function.
+
+The hook returns a function to connect a user, a function to disconnect, and the state; everything else is handled internally. The connections array in state contains objects which hold all required information about a connection between two users. The id of the users who offered and answered the connection, the firestore references to the offer and answer candidates collections, the connection document reference, the local and remote media stream objects, and the RTCPeerConnection istelf.
+
+The connections array is used to build an array of HTML audio elements, setting their srcObject to the local and remote media streams for that connection.
