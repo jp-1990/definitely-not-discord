@@ -2,7 +2,7 @@
 
 A client-side rendered React SPA, utilising a Firebase backend, bundled with Vite.
 
-<!-- ![](discord_clone_showcase.gif)   -->
+![](definitelynotdiscord_showcase.jpg)
 
 **Hosted on Firebase**  
 https://definitely-not-discord-8bf44.web.app/
