@@ -3,12 +3,10 @@ import {
   collection,
   addDoc,
   query,
-  doc,
   where,
   getDocs,
   deleteDoc,
   Firestore,
-  getDoc,
 } from "firebase/firestore";
 import { signOut, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 

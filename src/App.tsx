@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
-import firebase from "firebase/app";
+import { Firestore } from "@firebase/firestore";
+import { FirebaseStorage } from "@firebase/storage";
+import { User } from "@firebase/auth";
 
 import {
-  useAuth,
-  useFirebase,
   useFirestoreSubscriptions,
   useGetLogo,
   useSendMessage,
   useWebRTCConnections,
-  useWindowSize,
 } from "./hooks";
 
 import "./App.css";
-import SignIn from "./components/SignIn";
 import ServerList from "./components/ServerList";
 import ChannelList, { Channels } from "./components/ChannelList";
 import ChatWindow from "./components/ChatContent";
@@ -30,9 +28,6 @@ import {
   TextChannelState,
   ServerState,
 } from "./types";
-import { Firestore } from "@firebase/firestore";
-import { FirebaseStorage } from "@firebase/storage";
-import { User } from "@firebase/auth";
 
 interface Props {
   db: Firestore;
