@@ -21,7 +21,7 @@ const ServerList: React.FC<Props> = ({ icon, dimensions, children }) => {
     >
       <header>
         <div className={styles.iconContainer}>
-          <img src={icon} alt="Not discord icon" />
+          <img src={icon} alt="Not discord icon" referrerPolicy="no-referrer" />
         </div>
         <div className={styles.divider} />
       </header>

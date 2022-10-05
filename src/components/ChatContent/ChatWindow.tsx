@@ -30,7 +30,11 @@ const OnlineUser = ({ user }: { user: UserData }) => {
       <div className={styles.userListIcon}>
         {user.avatar && (
           <div>
-            <img src={imgSrc || unknownUser} onError={setImageUndefined} />
+            <img
+              src={imgSrc || unknownUser}
+              onError={setImageUndefined}
+              referrerPolicy="no-referrer"
+            />
             <div className={styles.onlineMarker} />
           </div>
         )}

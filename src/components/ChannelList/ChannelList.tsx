@@ -133,7 +133,11 @@ const ChannelList: React.FC<Props> = ({
         )}
         <div className={styles.userDetailsContainer}>
           <div className={styles.userImageContainer}>
-            <img src={imgSrc || unknownUser} onError={setImageUndefined} />
+            <img
+              src={imgSrc || unknownUser}
+              onError={setImageUndefined}
+              referrerPolicy="no-referrer"
+            />
             <div className={styles.userOnlineIcon} />
           </div>
           <div className={styles.userTextContainer}>

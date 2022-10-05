@@ -23,7 +23,11 @@ const Message: React.FC<Props> = ({ message, id, avatar, userName, date }) => {
   return (
     <article key={id}>
       <div className={styles.messageAvatar}>
-        <img src={imgSrc || unknownUser} onError={setImageUndefined} />
+        <img
+          src={imgSrc || unknownUser}
+          onError={setImageUndefined}
+          referrerPolicy="no-referrer"
+        />
       </div>
       <div className={styles.messageAuthor}>
         <h4>{userName}</h4>

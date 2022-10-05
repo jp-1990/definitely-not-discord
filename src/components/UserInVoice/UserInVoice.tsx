@@ -22,7 +22,11 @@ const UserInVoice: React.FC<Props> = ({ user, speaking }) => {
         >
           {user.avatar && (
             <div>
-              <img src={imgSrc || unknownUser} onError={setImageUndefined} />
+              <img
+                src={imgSrc || unknownUser}
+                onError={setImageUndefined}
+                referrerPolicy="no-referrer"
+              />
             </div>
           )}
         </div>
