@@ -10,8 +10,8 @@
 .container section {
   display: flex;
   background-color: #36393e;
-  height: 220px;
-  width: 300px;
+  height: 480px;
+  width: 320px;
   flex-direction: column;
   padding: 32px;
   border-radius: 8px;
