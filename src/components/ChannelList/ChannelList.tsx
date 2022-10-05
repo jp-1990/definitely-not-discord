@@ -102,7 +102,7 @@ const ChannelList: React.FC<Props> = ({
                 <AiFillSignal size="16px" />
                 <span>Voice Connected</span>
               </div>
-              <span>General/Air</span>
+              <span>General</span>
             </div>
             <button
               className={styles.disconnectButton}
