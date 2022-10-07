@@ -6,12 +6,12 @@ import { Auth, getAuth } from "@firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAd408UrbbLQ4o2SnLRiplOz6Qdqmp-UiY",
-  authDomain: "definitely-not-discord-8bf44.firebaseapp.com",
-  projectId: "definitely-not-discord-8bf44",
-  storageBucket: "definitely-not-discord-8bf44.appspot.com",
-  messagingSenderId: "839946763116",
-  appId: "1:839946763116:web:429835f1b1697ecc21d149",
+  apiKey: "AIzaSyBzBrxzkEpKJGP0B5mu9BweLAxborA9jAU",
+  authDomain: "definitely-not-a-popular-app.firebaseapp.com",
+  projectId: "definitely-not-a-popular-app",
+  storageBucket: "definitely-not-a-popular-app.appspot.com",
+  messagingSenderId: "72084038564",
+  appId: "1:72084038564:web:0123b66b4aabc625001731",
 };
 
 const firebaseApp = initializeApp(firebaseConfig);
